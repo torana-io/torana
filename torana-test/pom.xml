@@ -11,28 +11,27 @@
 
     <artifactId>torana-test</artifactId>
     <name>Torana Test</name>
+    <description>Testing utilities for Torana audit framework</description>
 
     <dependencies>
         <dependency>
             <groupId>io.torana</groupId>
             <artifactId>torana-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.torana</groupId>
-            <artifactId>torana-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.torana</groupId>
             <artifactId>torana-spi</artifactId>
-            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.torana</groupId>
+            <artifactId>torana-core</artifactId>
         </dependency>
 
+        <!-- AssertJ for custom assertions (compile scope for users) -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>
