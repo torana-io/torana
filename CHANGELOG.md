@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4](https://github.com/torana-io/torana/compare/v0.1.3...v0.1.4) (2026-03-15)
+
+
+### Features
+
+* Conditional wiring on spring security and telemetry ([9884436](https://github.com/torana-io/torana/commit/988443622d950f2f2411a2d742e9485b663f1c3d))
+
 ## [0.1.3](https://github.com/torana-io/torana/compare/v0.1.2...v0.1.3) (2026-03-15)
 
 
