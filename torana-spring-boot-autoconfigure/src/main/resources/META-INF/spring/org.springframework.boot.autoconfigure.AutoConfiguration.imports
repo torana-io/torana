@@ -1,1 +1,3 @@
 io.torana.spring.boot.autoconfigure.ToranaAutoConfiguration
+io.torana.spring.boot.autoconfigure.ToranaSecurityAutoConfiguration
+io.torana.spring.boot.autoconfigure.ToranaWebMvcAutoConfiguration

@@ -1,7 +1,7 @@
 package io.torana.spring.boot.autoconfigure;
 
 import io.torana.spi.ActorResolver;
-import io.torana.spring.security.SecurityContextActorResolver;
+import io.torana.spring.boot.autoconfigure.resolver.SecurityContextActorResolver;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -12,10 +12,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 /**
  * Auto-configuration for Spring Security integration.
  *
- * <p>Provides actor resolution from SecurityContext when Spring Security is present.
+ * <p>Automatically provides actor resolution from SecurityContext when Spring Security is present.
+ * No additional dependencies required - just add spring-boot-starter-security to your project.
  */
 @AutoConfiguration
-@ConditionalOnClass({SecurityContextHolder.class, SecurityContextActorResolver.class})
+@ConditionalOnClass(SecurityContextHolder.class)
 public class ToranaSecurityAutoConfiguration {
 
     @Bean
