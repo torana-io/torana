@@ -39,19 +39,10 @@ public class AuditPipeline {
      * @param context the audit context to process
      */
     public void process(AuditContext context) {
-        // 1. Collect context from resolvers
         contextCollector.collect(context);
-
-        // 2. Mark completion time
         context.markCompleted();
-
-        // 3. Create the audit entry
         AuditEntry entry = entryFactory.create(context);
-
-        // 4. Apply redaction
         AuditEntry redactedEntry = redactionPolicy != null ? redactionPolicy.apply(entry) : entry;
-
-        // 5. Persist (transaction-aware)
         transactionAwareWriter.write(redactedEntry, context.getOutcome());
     }
 }

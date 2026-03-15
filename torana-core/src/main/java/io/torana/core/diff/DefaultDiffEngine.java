@@ -83,7 +83,6 @@ public class DefaultDiffEngine implements DiffEngine {
         }
 
         if (depth > maxDepth) {
-            // At max depth, treat as atomic value
             if (!Objects.equals(before, after)) {
                 changes.add(new FieldChange(path, ChangeType.MODIFIED, before, after));
             }
@@ -95,7 +94,6 @@ public class DefaultDiffEngine implements DiffEngine {
         } else if (before != null && after == null) {
             changes.add(FieldChange.removed(path, before));
         } else if (!Objects.equals(before, after)) {
-            // For nested maps, recurse
             if (before instanceof Map<?, ?> beforeMap && after instanceof Map<?, ?> afterMap) {
                 Map<String, Object> bm = (Map<String, Object>) beforeMap;
                 Map<String, Object> am = (Map<String, Object>) afterMap;

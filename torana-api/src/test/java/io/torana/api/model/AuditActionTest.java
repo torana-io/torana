@@ -27,15 +27,15 @@ class AuditActionTest {
     @ParameterizedTest
     @ValueSource(
             strings = {
-                "Order.Cancelled", // uppercase letters
-                "order_cancelled", // underscore
-                "order-cancelled", // hyphen
-                ".order", // leading dot
-                "order.", // trailing dot
-                "order..cancelled", // double dot
-                "1order", // starts with number
-                "order.1cancelled", // segment starts with number
-                "" // empty string
+                "Order.Cancelled",
+                "order_cancelled",
+                "order-cancelled",
+                ".order",
+                "order.",
+                "order..cancelled",
+                "1order",
+                "order.1cancelled",
+                ""
             })
     void shouldRejectInvalidActionNames(String name) {
         assertThatThrownBy(() -> AuditAction.of(name)).isInstanceOf(IllegalArgumentException.class);

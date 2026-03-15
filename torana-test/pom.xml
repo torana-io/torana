@@ -6,12 +6,12 @@
     <parent>
         <groupId>io.torana</groupId>
         <artifactId>torana</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>torana-test</artifactId>
     <name>Torana Test</name>
-    <description>Testing utilities for Torana audit framework</description>
+    <description>Testing utilities and fake implementations</description>
 
     <dependencies>
         <dependency>
@@ -27,7 +27,6 @@
             <artifactId>torana-core</artifactId>
         </dependency>
 
-        <!-- AssertJ for custom assertions (compile scope for users) -->
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>

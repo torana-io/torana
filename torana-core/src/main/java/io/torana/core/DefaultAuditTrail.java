@@ -40,10 +40,8 @@ public class DefaultAuditTrail implements AuditTrail {
         AuditContext context = new AuditContext();
         context.markStarted();
 
-        // Set action
         context.setAction(AuditAction.of(record.getAction()));
 
-        // Set target if provided
         if (record.hasTarget()) {
             context.setTarget(
                     Target.of(
@@ -52,13 +50,10 @@ public class DefaultAuditTrail implements AuditTrail {
                             record.getTargetDisplayName()));
         }
 
-        // Set outcome
         context.setOutcome(record.getOutcome());
 
-        // Set metadata
         context.addAllMetadata(record.getMetadata());
 
-        // Set error message if present
         if (record.getErrorMessage() != null) {
             context.setErrorMessage(record.getErrorMessage());
         }
@@ -66,7 +61,6 @@ public class DefaultAuditTrail implements AuditTrail {
         // Note: Changes from AuditRecord would need to be handled differently
         // since they're already computed. For now, we don't set before/after snapshots.
 
-        // Process through pipeline
         pipeline.process(context);
     }
 

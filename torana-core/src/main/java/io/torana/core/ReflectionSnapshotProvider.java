@@ -39,7 +39,6 @@ public class ReflectionSnapshotProvider implements SnapshotProvider {
 
     @Override
     public boolean supports(Class<?> type) {
-        // Support any non-primitive type
         return type != null && !type.isPrimitive();
     }
 
@@ -51,7 +50,6 @@ public class ReflectionSnapshotProvider implements SnapshotProvider {
         Map<String, Object> snapshot = new HashMap<>();
         Class<?> clazz = source.getClass();
 
-        // Handle Map specially
         if (source instanceof Map<?, ?> map) {
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 String key = String.valueOf(entry.getKey());
@@ -60,7 +58,6 @@ public class ReflectionSnapshotProvider implements SnapshotProvider {
             return snapshot;
         }
 
-        // Capture fields via reflection
         while (clazz != null && clazz != Object.class) {
             for (Field field : clazz.getDeclaredFields()) {
                 if (Modifier.isStatic(field.getModifiers())) {
@@ -93,17 +90,14 @@ public class ReflectionSnapshotProvider implements SnapshotProvider {
             return value.toString();
         }
 
-        // Primitives and common types - return as-is
         if (isSimpleType(value.getClass())) {
             return value;
         }
 
-        // Collections - convert to list
         if (value instanceof Collection<?> collection) {
             return collection.stream().map(item -> captureValue(item, depth + 1)).toList();
         }
 
-        // Arrays - convert to list
         if (value.getClass().isArray()) {
             Object[] array = (Object[]) value;
             return java.util.Arrays.stream(array)
@@ -111,12 +105,10 @@ public class ReflectionSnapshotProvider implements SnapshotProvider {
                     .toList();
         }
 
-        // Maps - recurse
         if (value instanceof Map<?, ?>) {
             return captureObject(value, depth);
         }
 
-        // Complex objects - recurse
         return captureObject(value, depth);
     }
 

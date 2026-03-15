@@ -37,14 +37,11 @@ public class MicrometerTraceResolver implements TraceResolver {
             return Optional.empty();
         }
 
-        // Try to get traceId and spanId from context attributes
-        // These are typically set by the tracing bridge (Brave, OpenTelemetry)
         String traceId = getContextValue(context, "traceId");
         String spanId = getContextValue(context, "spanId");
         String parentSpanId = getContextValue(context, "parentSpanId");
 
         if (traceId == null && spanId == null) {
-            // Fallback: use observation name as a pseudo-trace identifier
             return Optional.empty();
         }
 
@@ -52,7 +49,6 @@ public class MicrometerTraceResolver implements TraceResolver {
     }
 
     private String getContextValue(Observation.Context context, String key) {
-        // Try to get from high cardinality key values
         return context.getHighCardinalityKeyValues().stream()
                 .filter(kv -> kv.getKey().equals(key))
                 .map(kv -> kv.getValue())

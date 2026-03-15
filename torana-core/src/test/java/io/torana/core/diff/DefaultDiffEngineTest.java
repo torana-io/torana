@@ -96,7 +96,6 @@ class DefaultDiffEngineTest {
 
     @Test
     void shouldRespectMaxDepth() {
-        // Create deeply nested structure
         Map<String, Object> nested =
                 Map.of(
                         "level1",
@@ -115,7 +114,6 @@ class DefaultDiffEngineTest {
         Map<String, Object> before = Map.of("root", nested);
         Map<String, Object> after = Map.of("root", Map.of("level1", Map.of("changed", true)));
 
-        // With default depth of 5, should still detect changes
         ChangeSet changes = diffEngine.diff(before, after);
         assertThat(changes.isEmpty()).isFalse();
     }

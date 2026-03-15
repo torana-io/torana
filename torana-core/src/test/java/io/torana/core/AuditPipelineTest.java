@@ -146,7 +146,7 @@ class AuditPipelineTest {
 
         AuditContext context = new AuditContext();
         context.setAction(AuditAction.of("test.action"));
-        context.setActor(explicitActor); // Explicitly set
+        context.setActor(explicitActor);
         context.markStarted();
 
         pipeline.process(context);
@@ -154,7 +154,6 @@ class AuditPipelineTest {
         verify(mockWriter).write(entryCaptor.capture());
         AuditEntry entry = entryCaptor.getValue();
 
-        // Should use explicitly set actor, not resolver
         assertThat(entry.actor().id()).isEqualTo("explicit-user");
     }
 

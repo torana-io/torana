@@ -6,11 +6,12 @@
     <parent>
         <groupId>io.torana</groupId>
         <artifactId>torana</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>torana-spring-webmvc</artifactId>
     <name>Torana Spring Web MVC</name>
+    <description>Spring Web MVC request context resolution</description>
 
     <dependencies>
         <dependency>

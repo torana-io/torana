@@ -6,12 +6,12 @@
     <parent>
         <groupId>io.torana</groupId>
         <artifactId>torana</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>torana-jdbc</artifactId>
     <name>Torana JDBC</name>
-    <description>JDBC persistence adapter for Torana audit framework</description>
+    <description>JDBC-based audit writer and query executor</description>
 
     <dependencies>
         <dependency>

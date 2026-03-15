@@ -29,7 +29,6 @@ public class DefaultRedactionPolicy implements RedactionPolicy {
         this.patterns = regexPatterns.stream().map(Pattern::compile).toList();
     }
 
-    /** Creates a policy with sensible defaults for common sensitive fields. */
     public static DefaultRedactionPolicy withDefaults() {
         return new DefaultRedactionPolicy(
                 Set.of(
@@ -51,7 +50,6 @@ public class DefaultRedactionPolicy implements RedactionPolicy {
                         ".*[Aa]uth.*[Kk]ey.*"));
     }
 
-    /** Creates an empty policy that doesn't redact anything. */
     public static DefaultRedactionPolicy none() {
         return new DefaultRedactionPolicy(Set.of(), List.of());
     }
@@ -91,18 +89,15 @@ public class DefaultRedactionPolicy implements RedactionPolicy {
             return false;
         }
 
-        // Extract the last segment (field name)
         String lastSegment =
                 fieldPath.contains(".")
                         ? fieldPath.substring(fieldPath.lastIndexOf('.') + 1)
                         : fieldPath;
 
-        // Check exact matches (case-insensitive)
         if (exactFields.stream().anyMatch(f -> f.equalsIgnoreCase(lastSegment))) {
             return true;
         }
 
-        // Check regex patterns
         return patterns.stream().anyMatch(p -> p.matcher(fieldPath).matches());
     }
 

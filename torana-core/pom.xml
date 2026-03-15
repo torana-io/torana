@@ -6,11 +6,12 @@
     <parent>
         <groupId>io.torana</groupId>
         <artifactId>torana</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>torana-core</artifactId>
     <name>Torana Core</name>
+    <description>Core audit engine and domain logic</description>
 
     <dependencies>
         <dependency>

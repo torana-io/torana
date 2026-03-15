@@ -124,7 +124,6 @@ class DefaultRedactionPolicyTest {
         AuditEntry entry = createEntryWithMetadata(Map.of("password", "secret"));
         AuditEntry redacted = policy.apply(entry);
 
-        // Verify other fields are preserved
         assertThat(redacted.id()).isEqualTo(entry.id());
         assertThat(redacted.action()).isEqualTo(entry.action());
         assertThat(redacted.occurredAt()).isEqualTo(entry.occurredAt());

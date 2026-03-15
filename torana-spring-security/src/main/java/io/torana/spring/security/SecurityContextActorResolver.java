@@ -23,7 +23,8 @@ import java.util.Optional;
  *   <li>Generic authentication (uses principal name)
  * </ul>
  *
- * <p>For OAuth2/JWT support, use the OAuth2 extension module.
+ * <p>For OAuth2/JWT support, implement a custom {@link ActorResolver} that extracts
+ * claims from the JWT token or OAuth2 authentication.
  */
 public class SecurityContextActorResolver implements ActorResolver {
 
@@ -44,12 +45,10 @@ public class SecurityContextActorResolver implements ActorResolver {
     }
 
     private Actor resolveFromPrincipal(Object principal, Authentication authentication) {
-        // Handle UserDetails
         if (principal instanceof UserDetails userDetails) {
             return createActorFromUserDetails(userDetails);
         }
 
-        // Fallback to principal name
         String name = authentication.getName();
         Map<String, String> attributes = extractAuthoritiesAsAttributes(authentication);
         return new Actor(name, ActorType.USER, name, attributes);
@@ -59,7 +58,6 @@ public class SecurityContextActorResolver implements ActorResolver {
         String username = userDetails.getUsername();
         Map<String, String> attributes = new HashMap<>();
 
-        // Add authorities as attribute
         if (!userDetails.getAuthorities().isEmpty()) {
             String authorities = userDetails.getAuthorities().stream()
                 .map(Object::toString)

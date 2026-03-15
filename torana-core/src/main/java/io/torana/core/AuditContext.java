@@ -40,7 +40,6 @@ public final class AuditContext {
         return action;
     }
 
-    // Action
     public void setAction(AuditAction action) {
         this.action = action;
     }
@@ -49,7 +48,6 @@ public final class AuditContext {
         return target;
     }
 
-    // Target
     public void setTarget(Target target) {
         this.target = target;
     }
@@ -58,7 +56,6 @@ public final class AuditContext {
         return actor;
     }
 
-    // Actor
     public void setActor(Actor actor) {
         this.actor = actor;
     }
@@ -67,7 +64,6 @@ public final class AuditContext {
         return tenant;
     }
 
-    // Tenant
     public void setTenant(Tenant tenant) {
         this.tenant = tenant;
     }
@@ -76,7 +72,6 @@ public final class AuditContext {
         return requestContext;
     }
 
-    // Request Context
     public void setRequestContext(RequestContext requestContext) {
         this.requestContext = requestContext;
     }
@@ -85,12 +80,10 @@ public final class AuditContext {
         return traceContext;
     }
 
-    // Trace Context
     public void setTraceContext(TraceContext traceContext) {
         this.traceContext = traceContext;
     }
 
-    // Metadata
     public void addMetadata(String key, Object value) {
         metadata.put(key, value);
     }
@@ -107,7 +100,6 @@ public final class AuditContext {
         return beforeSnapshot;
     }
 
-    // Snapshots
     public void setBeforeSnapshot(Map<String, Object> snapshot) {
         this.beforeSnapshot = snapshot != null ? Map.copyOf(snapshot) : null;
     }
@@ -128,7 +120,6 @@ public final class AuditContext {
         return outcome;
     }
 
-    // Outcome
     public void setOutcome(AuditOutcome outcome) {
         this.outcome = outcome;
     }
@@ -137,7 +128,6 @@ public final class AuditContext {
         return errorMessage;
     }
 
-    // Error
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }
@@ -147,7 +137,6 @@ public final class AuditContext {
         this.errorMessage = error.getMessage();
     }
 
-    // Timing
     public void markStarted() {
         this.startedAt = Instant.now();
     }

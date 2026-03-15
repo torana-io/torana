@@ -66,15 +66,12 @@ public class AuditedActionAspect {
         Method method = signature.getMethod();
         Object[] args = joinPoint.getArgs();
 
-        // Create evaluation context for SpEL
         EvaluationContext evaluationContext = createEvaluationContext(method, args);
 
-        // Initialize audit context
         AuditContext context = new AuditContext();
         context.markStarted();
         context.setAction(AuditAction.of(auditedAction.value()));
 
-        // Set target if specified
         String targetType = auditedAction.targetType();
         String targetIdExpr = auditedAction.targetId();
         String targetDisplayNameExpr = auditedAction.targetDisplayName();
@@ -91,20 +88,17 @@ public class AuditedActionAspect {
             }
         }
 
-        // Parse and evaluate metadata
         String metadataExpr = auditedAction.metadata();
         if (!metadataExpr.isEmpty()) {
             Map<String, Object> metadata = parseMetadata(metadataExpr, evaluationContext);
             context.addAllMetadata(metadata);
         }
 
-        // Add tags as metadata if present
         String[] tags = auditedAction.tags();
         if (tags.length > 0) {
             context.addMetadata("tags", java.util.List.of(tags));
         }
 
-        // Capture before snapshot if change tracking is enabled
         Object snapshotSource = null;
         if (auditedAction.captureChanges()
                 && snapshotProvider != null
@@ -117,7 +111,6 @@ public class AuditedActionAspect {
             }
         }
 
-        // Execute the actual method
         Object result;
         try {
             result = joinPoint.proceed();
@@ -130,14 +123,12 @@ public class AuditedActionAspect {
             }
             throw t;
         } finally {
-            // Capture after snapshot
             if (auditedAction.captureChanges()
                     && snapshotProvider != null
                     && snapshotSource != null) {
                 context.setAfterSnapshot(snapshotProvider.capture(snapshotSource));
             }
 
-            // Process through pipeline
             try {
                 auditPipeline.process(context);
             } catch (Exception e) {
@@ -152,7 +143,6 @@ public class AuditedActionAspect {
     private EvaluationContext createEvaluationContext(Method method, Object[] args) {
         StandardEvaluationContext context = new StandardEvaluationContext();
 
-        // Get parameter names
         String[] paramNames = parameterNameDiscoverer.getParameterNames(method);
         if (paramNames != null) {
             for (int i = 0; i < paramNames.length && i < args.length; i++) {
@@ -160,7 +150,6 @@ public class AuditedActionAspect {
             }
         }
 
-        // Also add args by index for fallback
         for (int i = 0; i < args.length; i++) {
             context.setVariable("arg" + i, args[i]);
             context.setVariable("p" + i, args[i]);

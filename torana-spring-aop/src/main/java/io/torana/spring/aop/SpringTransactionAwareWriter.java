@@ -28,16 +28,13 @@ public class SpringTransactionAwareWriter implements TransactionAwareWriter {
     @Override
     public void write(AuditEntry entry, AuditOutcome outcome) {
         if (outcome == AuditOutcome.FAILURE) {
-            // Write failures immediately
             delegate.write(entry);
             return;
         }
 
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            // Register to write after commit
             TransactionSynchronizationManager.registerSynchronization(new AfterCommitWriter(entry));
         } else {
-            // No active transaction, write immediately
             delegate.write(entry);
         }
     }

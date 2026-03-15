@@ -48,7 +48,6 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
     private final String tableName;
     private final ObjectMapper objectMapper;
 
-    // Query parameters
     private String action;
     private String actionPrefix;
     private String actorId;
@@ -360,7 +359,6 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
                 return ChangeSet.empty();
             }
             try {
-                // Changes are stored as a list directly
                 List<FieldChange> changes =
                         objectMapper.readValue(json, new TypeReference<List<FieldChange>>() {});
                 return ChangeSet.of(changes);

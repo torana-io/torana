@@ -44,7 +44,7 @@ public class H2Dialect implements SqlDialect {
 
     @Override
     public Object toJsonValue(String json) {
-        return json; // H2 stores JSON as CLOB (string)
+        return json;
     }
 
     @Override

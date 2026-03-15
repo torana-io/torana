@@ -44,7 +44,6 @@ class JdbcAuditWriterMySqlIT {
         jdbcTemplate = new JdbcTemplate(dataSource);
         dialect = new MySqlDialect();
 
-        // Run Flyway migrations
         Flyway flyway =
                 Flyway.configure()
                         .dataSource(dataSource)
@@ -75,13 +74,10 @@ class JdbcAuditWriterMySqlIT {
 
     @Test
     void writeAndReadEntry_success() {
-        // Given
         AuditEntry entry = createTestEntry("order.created");
 
-        // When
         writer.write(entry);
 
-        // Then
         List<AuditEntryView> results = newQuery().action("order.created").execute();
 
         assertThat(results).hasSize(1);
@@ -94,15 +90,12 @@ class JdbcAuditWriterMySqlIT {
 
     @Test
     void writeWithMetadata_preservesJson() {
-        // Given
         Map<String, Object> metadata =
                 Map.of("orderId", "ORD-12345", "amount", 99.99, "items", List.of("item1", "item2"));
         AuditEntry entry = createTestEntryWithMetadata("order.placed", metadata);
 
-        // When
         writer.write(entry);
 
-        // Then
         List<AuditEntryView> results = newQuery().action("order.placed").execute();
 
         assertThat(results).hasSize(1);
@@ -111,7 +104,6 @@ class JdbcAuditWriterMySqlIT {
 
     @Test
     void writeWithChanges_preservesFieldChanges() {
-        // Given
         ChangeSet changes =
                 ChangeSet.of(
                         List.of(
@@ -127,10 +119,8 @@ class JdbcAuditWriterMySqlIT {
                                         "TRK-123")));
         AuditEntry entry = createTestEntryWithChanges("order.shipped", changes);
 
-        // When
         writer.write(entry);
 
-        // Then
         List<AuditEntryView> results = newQuery().action("order.shipped").execute();
 
         assertThat(results).hasSize(1);
@@ -140,22 +130,18 @@ class JdbcAuditWriterMySqlIT {
 
     @Test
     void queryByActor_filtersCorrectly() {
-        // Given
         writer.write(createTestEntryWithActor("action.one", "user-A"));
         writer.write(createTestEntryWithActor("action.two", "user-B"));
         writer.write(createTestEntryWithActor("action.three", "user-A"));
 
-        // When
         List<AuditEntryView> results = newQuery().actor("user-A").execute();
 
-        // Then
         assertThat(results).hasSize(2);
         assertThat(results).allSatisfy(r -> assertThat(r.actor().id()).isEqualTo("user-A"));
     }
 
     @Test
     void queryByTimeRange_filtersCorrectly() {
-        // Given
         Instant now = Instant.now();
         Instant oneHourAgo = now.minusSeconds(3600);
         Instant twoHoursAgo = now.minusSeconds(7200);
@@ -164,53 +150,42 @@ class JdbcAuditWriterMySqlIT {
         writer.write(createTestEntryAtTime("recent.action", oneHourAgo.plusSeconds(1800)));
         writer.write(createTestEntryAtTime("newer.action", now.minusSeconds(300)));
 
-        // When
         List<AuditEntryView> results = newQuery().from(oneHourAgo).to(now).execute();
 
-        // Then
         assertThat(results).hasSize(2);
     }
 
     @Test
     void queryWithPagination_returnsCorrectPage() {
-        // Given
         for (int i = 0; i < 10; i++) {
             writer.write(createTestEntry("action.test" + i));
         }
 
-        // When
         List<AuditEntryView> results = newQuery().limit(3).offset(2).execute();
 
-        // Then
         assertThat(results).hasSize(3);
     }
 
     @Test
     void queryByOutcome_filtersCorrectly() {
-        // Given
         writer.write(createTestEntryWithOutcome("success.action", AuditOutcome.SUCCESS));
         writer.write(createTestEntryWithOutcome("failure.action", AuditOutcome.FAILURE));
         writer.write(createTestEntryWithOutcome("another.success", AuditOutcome.SUCCESS));
 
-        // When
         List<AuditEntryView> results = newQuery().outcome(AuditOutcome.FAILURE).execute();
 
-        // Then
         assertThat(results).hasSize(1);
         assertThat(results.get(0).action()).isEqualTo("failure.action");
     }
 
     @Test
     void count_returnsCorrectTotal() {
-        // Given
         writer.write(createTestEntry("count.test.one"));
         writer.write(createTestEntry("count.test.two"));
         writer.write(createTestEntry("count.test.three"));
 
-        // When
         long count = newQuery().count();
 
-        // Then
         assertThat(count).isEqualTo(3);
     }
 

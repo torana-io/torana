@@ -107,7 +107,6 @@ public class ToranaAutoConfiguration {
     public RedactionPolicy toranaRedactionPolicy(ToranaProperties properties) {
         ToranaProperties.RedactionProperties redaction = properties.getRedaction();
         List<String> regexPatterns = java.util.Arrays.asList(redaction.getPatterns());
-        // Use empty set for exact fields - all patterns are regex-based
         return new DefaultRedactionPolicy(java.util.Set.of(), regexPatterns);
     }
 

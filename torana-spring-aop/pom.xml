@@ -6,11 +6,12 @@
     <parent>
         <groupId>io.torana</groupId>
         <artifactId>torana</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>torana-spring-aop</artifactId>
     <name>Torana Spring AOP</name>
+    <description>Spring AOP integration for @AuditedAction</description>
 
     <dependencies>
         <dependency>

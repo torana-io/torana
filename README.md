@@ -1,5 +1,9 @@
 # Torana
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.torana/torana-spring-boot-starter)](https://central.sonatype.com/artifact/io.torana/torana-spring-boot-starter)
+[![Build Status](https://github.com/torana-io/torana/workflows/CI/badge.svg)](https://github.com/torana-io/torana/actions)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 **Structured business audit trails for Spring Boot applications.**
 
 Torana is an open-source library for auditing **explicit business actions** in Spring Boot systems.  
@@ -37,7 +41,27 @@ Torana fills a different gap:
 - Keep the **core framework-agnostic** and Spring integration natural.
 - Keep overhead **predictable and bounded**.
 
-## Example direction
+## Installation
+
+Add the starter dependency to your project:
+
+**Maven:**
+```xml
+<dependency>
+    <groupId>io.torana</groupId>
+    <artifactId>torana-spring-boot-starter</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+**Gradle:**
+```groovy
+implementation 'io.torana:torana-spring-boot-starter:0.1.0'
+```
+
+That's it! The starter includes all necessary modules.
+
+## Example usage
 
 ```java
 @AuditedAction(
@@ -77,31 +101,18 @@ torana-spring-boot-starter
 torana-test
 ```
 
-## Repository layout
-
-```text
-/docs
-  /00-vision
-  /01-product
-  /02-architecture
-  /03-domain
-  /04-api
-  /05-competitive-analysis
-  /06-roadmap
-  /07-decisions
-```
-
 ## Current status
 
-Torana is currently in the design and architecture phase.
+Torana has completed its initial development phase and is ready for production use.
 
-The initial goals are:
+Features include:
 
-- define the public API and extension model
-- build a plain-Java core
-- add Spring Boot integration modules
-- provide a JDBC-based append-only writer
-- support explicit action auditing through annotations and programmatic APIs
+- Public API with `@AuditedAction` annotation and programmatic `AuditRecord` builder
+- Plain-Java core with Spring Boot integration modules
+- JDBC-based append-only writer with PostgreSQL, MySQL, and H2 support
+- Spring Security, Web MVC, and Micrometer integrations
+- Configurable redaction policy for sensitive data
+- Testing utilities for audit assertions
 
 ## What Torana is not trying to be
 
@@ -138,4 +149,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-TBD
+Apache License 2.0 - see [LICENSE](LICENSE) for details.

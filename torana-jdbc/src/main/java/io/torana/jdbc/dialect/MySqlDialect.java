@@ -44,7 +44,7 @@ public class MySqlDialect implements SqlDialect {
 
     @Override
     public Object toJsonValue(String json) {
-        return json; // MySQL accepts JSON as string
+        return json;
     }
 
     @Override

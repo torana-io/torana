@@ -44,7 +44,6 @@ public class PostgreSqlDialect implements SqlDialect {
 
     @Override
     public Object toJsonValue(String json) {
-        // For PostgreSQL, we pass the JSON string and use ::jsonb cast in SQL
         return json;
     }
 

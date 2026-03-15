@@ -348,7 +348,6 @@ class JdbcAuditQueryExecutorTest {
         query1.action("action1");
         query2.action("action2");
 
-        // They should be independent
         assertThat(query1).isNotSameAs(query2);
     }
 }

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!--
+        SpotBugs exclusion filter for Torana audit framework.
+        Add exclusions for known false positives here.
+    -->
+
+    <!-- Exclude test classes from certain checks -->
+    <Match>
+        <Source name="~.*Test\.java"/>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+    </Match>
+
+    <!-- Allow null returns in Optional-returning methods where documented -->
+    <Match>
+        <Bug pattern="NP_OPTIONAL_RETURN_NULL"/>
+    </Match>
+
+    <!-- Allow exposing internal representation for builder patterns -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Or>
+            <Class name="~.*Builder"/>
+            <Method name="builder"/>
+        </Or>
+    </Match>
+
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+        <Or>
+            <Class name="~.*Builder"/>
+            <Method name="builder"/>
+        </Or>
+    </Match>
+
+    <!-- Exclude generated code if any -->
+    <Match>
+        <Source name="~.*generated.*"/>
+    </Match>
+
+    <!-- Allow certain patterns in record classes (Java 16+) -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Class name="~io\.torana\.api\.model\..*"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+        <Class name="~io\.torana\.api\.model\..*"/>
+    </Match>
+</FindBugsFilter>

@@ -41,7 +41,6 @@ class JdbcAuditWriterH2IT {
         jdbcTemplate = new JdbcTemplate(dataSource);
         dialect = new H2Dialect();
 
-        // Run Flyway migrations
         Flyway flyway =
                 Flyway.configure()
                         .dataSource(dataSource)
@@ -70,13 +69,10 @@ class JdbcAuditWriterH2IT {
 
     @Test
     void writeAndReadEntry_success() {
-        // Given
         AuditEntry entry = createTestEntry("order.created");
 
-        // When
         writer.write(entry);
 
-        // Then
         List<AuditEntryView> results = newQuery().action("order.created").execute();
 
         assertThat(results).hasSize(1);
@@ -89,15 +85,12 @@ class JdbcAuditWriterH2IT {
 
     @Test
     void writeWithMetadata_preservesJson() {
-        // Given
         Map<String, Object> metadata =
                 Map.of("orderId", "ORD-12345", "amount", 99.99, "items", List.of("item1", "item2"));
         AuditEntry entry = createTestEntryWithMetadata("order.placed", metadata);
 
-        // When
         writer.write(entry);
 
-        // Then
         List<AuditEntryView> results = newQuery().action("order.placed").execute();
 
         assertThat(results).hasSize(1);
@@ -106,7 +99,6 @@ class JdbcAuditWriterH2IT {
 
     @Test
     void writeWithChanges_preservesFieldChanges() {
-        // Given
         ChangeSet changes =
                 ChangeSet.of(
                         List.of(
@@ -122,10 +114,8 @@ class JdbcAuditWriterH2IT {
                                         "TRK-123")));
         AuditEntry entry = createTestEntryWithChanges("order.shipped", changes);
 
-        // When
         writer.write(entry);
 
-        // Then
         List<AuditEntryView> results = newQuery().action("order.shipped").execute();
 
         assertThat(results).hasSize(1);
@@ -135,52 +125,42 @@ class JdbcAuditWriterH2IT {
 
     @Test
     void queryByActor_filtersCorrectly() {
-        // Given
         writer.write(createTestEntryWithActor("action.one", "user-A"));
         writer.write(createTestEntryWithActor("action.two", "user-B"));
         writer.write(createTestEntryWithActor("action.three", "user-A"));
 
-        // When
         List<AuditEntryView> results = newQuery().actor("user-A").execute();
 
-        // Then
         assertThat(results).hasSize(2);
         assertThat(results).allSatisfy(r -> assertThat(r.actor().id()).isEqualTo("user-A"));
     }
 
     @Test
     void queryByTarget_filtersCorrectly() {
-        // Given
         writer.write(createTestEntryWithTarget("action.one", "Order", "order-1"));
         writer.write(createTestEntryWithTarget("action.two", "Payment", "payment-1"));
         writer.write(createTestEntryWithTarget("action.three", "Order", "order-2"));
 
-        // When
         List<AuditEntryView> results = newQuery().targetType("Order").execute();
 
-        // Then
         assertThat(results).hasSize(2);
         assertThat(results).allSatisfy(r -> assertThat(r.target().type()).isEqualTo("Order"));
     }
 
     @Test
     void queryByTenant_filtersCorrectly() {
-        // Given
         writer.write(createTestEntryWithTenant("action.one", "tenant-A"));
         writer.write(createTestEntryWithTenant("action.two", "tenant-B"));
         writer.write(createTestEntryWithTenant("action.three", "tenant-A"));
 
-        // When
         List<AuditEntryView> results = newQuery().tenant("tenant-A").execute();
 
-        // Then
         assertThat(results).hasSize(2);
         assertThat(results).allSatisfy(r -> assertThat(r.tenant().id()).isEqualTo("tenant-A"));
     }
 
     @Test
     void queryByTimeRange_filtersCorrectly() {
-        // Given
         Instant now = Instant.now();
         Instant oneHourAgo = now.minusSeconds(3600);
         Instant twoHoursAgo = now.minusSeconds(7200);
@@ -189,73 +169,58 @@ class JdbcAuditWriterH2IT {
         writer.write(createTestEntryAtTime("recent.action", oneHourAgo.plusSeconds(1800)));
         writer.write(createTestEntryAtTime("newer.action", now.minusSeconds(300)));
 
-        // When
         List<AuditEntryView> results = newQuery().from(oneHourAgo).to(now).execute();
 
-        // Then
         assertThat(results).hasSize(2);
     }
 
     @Test
     void queryWithPagination_returnsCorrectPage() {
-        // Given
         for (int i = 0; i < 10; i++) {
             writer.write(createTestEntry("action.test" + i));
         }
 
-        // When
         List<AuditEntryView> results = newQuery().limit(3).offset(2).execute();
 
-        // Then
         assertThat(results).hasSize(3);
     }
 
     @Test
     void queryByOutcome_filtersCorrectly() {
-        // Given
         writer.write(createTestEntryWithOutcome("success.action", AuditOutcome.SUCCESS));
         writer.write(createTestEntryWithOutcome("failure.action", AuditOutcome.FAILURE));
         writer.write(createTestEntryWithOutcome("another.success", AuditOutcome.SUCCESS));
 
-        // When
         List<AuditEntryView> results = newQuery().outcome(AuditOutcome.FAILURE).execute();
 
-        // Then
         assertThat(results).hasSize(1);
         assertThat(results.get(0).action()).isEqualTo("failure.action");
     }
 
     @Test
     void count_returnsCorrectTotal() {
-        // Given
         writer.write(createTestEntry("count.test.one"));
         writer.write(createTestEntry("count.test.two"));
         writer.write(createTestEntry("count.test.three"));
 
-        // When
         long count = newQuery().count();
 
-        // Then
         assertThat(count).isEqualTo(3);
     }
 
     @Test
     void countWithFilter_returnsFilteredCount() {
-        // Given
         writer.write(createTestEntryWithOutcome("success.one", AuditOutcome.SUCCESS));
         writer.write(createTestEntryWithOutcome("failure.one", AuditOutcome.FAILURE));
         writer.write(createTestEntryWithOutcome("success.two", AuditOutcome.SUCCESS));
 
-        // When
         long count = newQuery().outcome(AuditOutcome.SUCCESS).count();
 
-        // Then
         assertThat(count).isEqualTo(2);
     }
 
     @Test
     void multipleFilters_combinedCorrectly() {
-        // Given
         writer.write(createFullEntry("order.created", "user-A", "tenant-1", AuditOutcome.SUCCESS));
         writer.write(
                 createFullEntry("order.cancelled", "user-A", "tenant-1", AuditOutcome.SUCCESS));
@@ -263,7 +228,6 @@ class JdbcAuditWriterH2IT {
         writer.write(createFullEntry("order.created", "user-A", "tenant-2", AuditOutcome.SUCCESS));
         writer.write(createFullEntry("order.created", "user-A", "tenant-1", AuditOutcome.FAILURE));
 
-        // When - filter by action, actor, tenant, and outcome
         List<AuditEntryView> results =
                 newQuery()
                         .action("order.created")
@@ -272,7 +236,6 @@ class JdbcAuditWriterH2IT {
                         .outcome(AuditOutcome.SUCCESS)
                         .execute();
 
-        // Then
         assertThat(results).hasSize(1);
     }
 

@@ -74,38 +74,30 @@ public class JdbcAuditWriter implements AuditWriter {
 
         jdbcTemplate.update(
                 sql,
-                // id, action, occurred_at, outcome
                 entry.id(),
                 entry.action().name(),
                 Timestamp.from(entry.occurredAt()),
                 entry.outcome().name(),
-                // actor_id, actor_type, actor_name
                 extractActorId(entry.actor()),
                 extractActorType(entry.actor()),
                 extractActorName(entry.actor()),
-                // tenant_id, tenant_name
                 extractTenantId(entry.tenant()),
                 extractTenantName(entry.tenant()),
-                // target_type, target_id, target_name
                 extractTargetType(entry.target()),
                 extractTargetId(entry.target()),
                 extractTargetName(entry.target()),
-                // request_id, request_method, request_path, client_ip, user_agent
                 extractRequestId(entry.requestContext()),
                 extractRequestMethod(entry.requestContext()),
                 extractRequestPath(entry.requestContext()),
                 extractClientIp(entry.requestContext()),
                 extractUserAgent(entry.requestContext()),
-                // trace_id, span_id, parent_span_id
                 extractTraceId(entry.traceContext()),
                 extractSpanId(entry.traceContext()),
                 extractParentSpanId(entry.traceContext()),
-                // metadata, changes (serialize just the changes list, not the wrapper)
                 dialect.toJsonValue(serializeToJson(entry.metadata())),
                 dialect.toJsonValue(
                         serializeToJson(
                                 entry.changes() != null ? entry.changes().changes() : null)),
-                // error_message, schema_version
                 entry.errorMessage(),
                 entry.schemaVersion());
     }
@@ -126,33 +118,26 @@ public class JdbcAuditWriter implements AuditWriter {
                 entries.size(),
                 (ps, entry) -> {
                     int idx = 1;
-                    // id, action, occurred_at, outcome
                     ps.setObject(idx++, entry.id());
                     ps.setString(idx++, entry.action().name());
                     ps.setTimestamp(idx++, Timestamp.from(entry.occurredAt()));
                     ps.setString(idx++, entry.outcome().name());
-                    // actor_id, actor_type, actor_name
                     ps.setString(idx++, extractActorId(entry.actor()));
                     ps.setString(idx++, extractActorType(entry.actor()));
                     ps.setString(idx++, extractActorName(entry.actor()));
-                    // tenant_id, tenant_name
                     ps.setString(idx++, extractTenantId(entry.tenant()));
                     ps.setString(idx++, extractTenantName(entry.tenant()));
-                    // target_type, target_id, target_name
                     ps.setString(idx++, extractTargetType(entry.target()));
                     ps.setString(idx++, extractTargetId(entry.target()));
                     ps.setString(idx++, extractTargetName(entry.target()));
-                    // request_id, request_method, request_path, client_ip, user_agent
                     ps.setString(idx++, extractRequestId(entry.requestContext()));
                     ps.setString(idx++, extractRequestMethod(entry.requestContext()));
                     ps.setString(idx++, extractRequestPath(entry.requestContext()));
                     ps.setString(idx++, extractClientIp(entry.requestContext()));
                     ps.setString(idx++, extractUserAgent(entry.requestContext()));
-                    // trace_id, span_id, parent_span_id
                     ps.setString(idx++, extractTraceId(entry.traceContext()));
                     ps.setString(idx++, extractSpanId(entry.traceContext()));
                     ps.setString(idx++, extractParentSpanId(entry.traceContext()));
-                    // metadata, changes (serialize just the changes list, not the wrapper)
                     ps.setObject(idx++, dialect.toJsonValue(serializeToJson(entry.metadata())));
                     ps.setObject(
                             idx++,
@@ -161,7 +146,6 @@ public class JdbcAuditWriter implements AuditWriter {
                                             entry.changes() != null
                                                     ? entry.changes().changes()
                                                     : null)));
-                    // error_message, schema_version
                     ps.setString(idx++, entry.errorMessage());
                     ps.setInt(idx, entry.schemaVersion());
                 });

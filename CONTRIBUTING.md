@@ -218,7 +218,51 @@ Before opening a pull request, make sure:
 - the change is scoped and understandable
 - any major design trade-offs are explained
 
-## Commit and PR style
+## Commit messages
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) for automated versioning and changelog generation.
+
+### Format
+
+```
+<type>: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Types
+
+- `feat:` - New features (bumps minor version)
+- `fix:` - Bug fixes (bumps patch version)
+- `docs:` - Documentation changes
+- `chore:` - Maintenance tasks (dependencies, build config)
+- `refactor:` - Code refactoring (no functional changes)
+- `test:` - Test additions or improvements
+- `perf:` - Performance improvements
+
+### Breaking changes
+
+Add `!` after type (e.g., `feat!:`) or include `BREAKING CHANGE:` in the footer.
+
+### Examples
+
+```
+feat: add OAuth2 actor resolver
+
+fix: handle null actor in AuditPipeline
+
+docs: improve installation guide
+
+feat!: rename AuditRecord.getAction() to AuditRecord.action()
+
+BREAKING CHANGE: Method signature changed for consistency with records.
+
+chore: update Spring Boot to 4.1.0
+```
+
+## Pull request style
 
 Prefer small, focused pull requests.
 
@@ -227,6 +271,7 @@ Good PRs usually:
 - include tests
 - include docs where relevant
 - explain trade-offs briefly and clearly
+- use conventional commit messages
 
 ## Communication
 

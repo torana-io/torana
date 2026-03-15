@@ -74,7 +74,6 @@ public class WebMvcRequestContextResolver implements RequestContextResolver {
     }
 
     private String resolveRequestId(HttpServletRequest request) {
-        // Try common request ID headers
         String requestId = request.getHeader(X_REQUEST_ID);
         if (requestId != null && !requestId.isBlank()) {
             return requestId;
@@ -85,26 +84,21 @@ public class WebMvcRequestContextResolver implements RequestContextResolver {
             return requestId;
         }
 
-        // Generate a request ID if none found
         return UUID.randomUUID().toString();
     }
 
     private String resolveClientIp(HttpServletRequest request) {
-        // Check X-Forwarded-For header (may contain comma-separated list)
         String forwardedFor = request.getHeader(X_FORWARDED_FOR);
         if (forwardedFor != null && !forwardedFor.isBlank()) {
-            // Return first IP in the chain (original client)
             String[] ips = forwardedFor.split(",");
             return ips[0].trim();
         }
 
-        // Check X-Real-IP header
         String realIp = request.getHeader(X_REAL_IP);
         if (realIp != null && !realIp.isBlank()) {
             return realIp.trim();
         }
 
-        // Fall back to remote address
         return request.getRemoteAddr();
     }
 

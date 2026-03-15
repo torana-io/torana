@@ -6,11 +6,12 @@
     <parent>
         <groupId>io.torana</groupId>
         <artifactId>torana</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>torana-spring-boot-starter</artifactId>
     <name>Torana Spring Boot Starter</name>
+    <description>Spring Boot starter dependency aggregator</description>
 
     <dependencies>
         <dependency>

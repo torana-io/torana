@@ -10,7 +10,6 @@ import javax.sql.DataSource;
 public final class DialectDetector {
 
     private DialectDetector() {
-        // Utility class
     }
 
     /**
