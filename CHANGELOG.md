@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5](https://github.com/torana-io/torana/compare/v0.1.4...v0.1.5) (2026-03-15)
+
+
+### Features
+
+* add automatic Spring Security and WebMVC integration ([c752db4](https://github.com/torana-io/torana/commit/c752db4c122d72aa92055a8c9654a1c5ac5bd849))
+
 ## [0.1.4](https://github.com/torana-io/torana/compare/v0.1.3...v0.1.4) (2026-03-15)
 
 
