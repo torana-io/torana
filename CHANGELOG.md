@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1](https://github.com/torana-io/torana/compare/v0.1.0...v0.1.1) (2026-03-15)
+
+
+### Features
+
+* initial release of Torana audit framework ([77bef22](https://github.com/torana-io/torana/commit/77bef22816c5701703f39d9b239a0753b0a8780e))
+* initial release of Torana audit framework ([27b3988](https://github.com/torana-io/torana/commit/27b3988171369b6aa909de132a95bac736d48f37))
+* Update actions token for release ([99efc93](https://github.com/torana-io/torana/commit/99efc93f131efa39e4174eba1aa147fa131b054e))
+
 ## [Unreleased]
 
 ### Added
