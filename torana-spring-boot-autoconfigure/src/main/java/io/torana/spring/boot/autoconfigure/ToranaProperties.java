@@ -12,11 +12,31 @@ public class ToranaProperties {
     /** The database table name for storing audit entries. */
     private String tableName = "audit_entries";
 
+    /**
+     * Schema initialization mode.
+     * <ul>
+     *   <li>{@code none} - No schema initialization (default)</li>
+     *   <li>{@code create} - Create schema if it doesn't exist</li>
+     *   <li>{@code create-drop} - Create schema on startup, drop on shutdown</li>
+     * </ul>
+     */
+    private SchemaMode schemaMode = SchemaMode.CREATE;
+
     /** Redaction configuration. */
     private RedactionProperties redaction = new RedactionProperties();
 
     /** Snapshot configuration for change tracking. */
     private SnapshotProperties snapshot = new SnapshotProperties();
+
+    /** Schema initialization modes. */
+    public enum SchemaMode {
+        /** No automatic schema creation. */
+        NONE,
+        /** Create schema if it doesn't exist. */
+        CREATE,
+        /** Create schema on startup, drop on shutdown. */
+        CREATE_DROP
+    }
 
     public boolean isEnabled() {
         return enabled;
@@ -32,6 +52,14 @@ public class ToranaProperties {
 
     public void setTableName(String tableName) {
         this.tableName = tableName;
+    }
+
+    public SchemaMode getSchemaMode() {
+        return schemaMode;
+    }
+
+    public void setSchemaMode(SchemaMode schemaMode) {
+        this.schemaMode = schemaMode;
     }
 
     public RedactionProperties getRedaction() {

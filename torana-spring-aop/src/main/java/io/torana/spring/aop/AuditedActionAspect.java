@@ -12,6 +12,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.expression.EvaluationContext;
@@ -40,6 +42,8 @@ import java.util.regex.Pattern;
  */
 @Aspect
 public class AuditedActionAspect {
+
+    private static final Logger log = LoggerFactory.getLogger(AuditedActionAspect.class);
 
     private static final Pattern METADATA_PATTERN =
             Pattern.compile("([\\w.]+)\\s*=\\s*(.+?)(?:,|$)");
@@ -132,8 +136,9 @@ public class AuditedActionAspect {
             try {
                 auditPipeline.process(context);
             } catch (Exception e) {
-                // Don't let audit failures affect business logic
-                // Log would go here in production
+                log.warn("Failed to write audit entry for action '{}': {}",
+                        context.getAction() != null ? context.getAction().name() : "unknown",
+                        e.getMessage(), e);
             }
         }
 

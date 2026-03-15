@@ -1,9 +1,5 @@
 package io.torana.spring.boot.autoconfigure;
 
-import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.tracing.Tracer;
-import io.torana.micrometer.MicrometerTraceResolver;
-import io.torana.micrometer.MicrometerTracingResolver;
 import io.torana.spi.TraceResolver;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -11,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Auto-configuration for Micrometer tracing integration.
@@ -22,19 +19,25 @@ import org.springframework.context.annotation.Bean;
 @AutoConfiguration
 public class ToranaMicrometerAutoConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean(TraceResolver.class)
-    @ConditionalOnClass(Tracer.class)
-    @ConditionalOnBean(Tracer.class)
-    public TraceResolver toranaMicrometerTracingResolver(Tracer tracer) {
-        return new MicrometerTracingResolver(tracer);
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(name = {"io.micrometer.tracing.Tracer", "io.torana.micrometer.MicrometerTracingResolver"})
+    static class TracerConfiguration {
+        @Bean
+        @ConditionalOnMissingBean(TraceResolver.class)
+        @ConditionalOnBean(name = "tracer")
+        public TraceResolver toranaMicrometerTracingResolver(io.micrometer.tracing.Tracer tracer) {
+            return new io.torana.micrometer.MicrometerTracingResolver(tracer);
+        }
     }
 
-    @Bean
-    @ConditionalOnMissingBean(TraceResolver.class)
-    @ConditionalOnClass(ObservationRegistry.class)
-    @ConditionalOnBean(ObservationRegistry.class)
-    public TraceResolver toranaMicrometerTraceResolver(ObservationRegistry observationRegistry) {
-        return new MicrometerTraceResolver(observationRegistry);
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(name = {"io.micrometer.observation.ObservationRegistry", "io.torana.micrometer.MicrometerTraceResolver"})
+    static class ObservationConfiguration {
+        @Bean
+        @ConditionalOnMissingBean(TraceResolver.class)
+        @ConditionalOnBean(name = "observationRegistry")
+        public TraceResolver toranaMicrometerTraceResolver(io.micrometer.observation.ObservationRegistry observationRegistry) {
+            return new io.torana.micrometer.MicrometerTraceResolver(observationRegistry);
+        }
     }
 }

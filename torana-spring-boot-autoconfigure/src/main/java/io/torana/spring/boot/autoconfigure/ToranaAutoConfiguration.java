@@ -21,11 +21,16 @@ import io.torana.spi.TraceResolver;
 import io.torana.spring.aop.AuditedActionAspect;
 import io.torana.spring.aop.SpringTransactionAwareWriter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -47,7 +52,7 @@ import javax.sql.DataSource;
  *   <li>Diff engine and redaction policy
  * </ul>
  */
-@AutoConfiguration
+@AutoConfiguration(after = {DataSourceAutoConfiguration.class, JdbcTemplateAutoConfiguration.class})
 @ConditionalOnProperty(
         prefix = "torana",
         name = "enabled",
@@ -55,6 +60,8 @@ import javax.sql.DataSource;
         matchIfMissing = true)
 @EnableConfigurationProperties(ToranaProperties.class)
 public class ToranaAutoConfiguration {
+
+    private static final Logger log = LoggerFactory.getLogger(ToranaAutoConfiguration.class);
 
     @Bean
     @ConditionalOnMissingBean
@@ -71,6 +78,14 @@ public class ToranaAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean({JdbcTemplate.class, SqlDialect.class})
+    public ToranaSchemaInitializer toranaSchemaInitializer(
+            JdbcTemplate jdbcTemplate, SqlDialect dialect, ToranaProperties properties) {
+        return new ToranaSchemaInitializer(jdbcTemplate, dialect, properties);
+    }
+
+    @Bean
     @ConditionalOnMissingBean(AuditWriter.class)
     @ConditionalOnBean({JdbcTemplate.class, SqlDialect.class})
     public AuditWriter toranaAuditWriter(
@@ -80,6 +95,7 @@ public class ToranaAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnBean(AuditWriter.class)
     @ConditionalOnClass(TransactionSynchronizationManager.class)
     public TransactionAwareWriter toranaTransactionAwareWriter(AuditWriter auditWriter) {
         return new SpringTransactionAwareWriter(auditWriter);
@@ -141,7 +157,9 @@ public class ToranaAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public AuditedActionAspect toranaAuditedActionAspect(
-            AuditPipeline auditPipeline, SnapshotProvider snapshotProvider) {
+            AuditPipeline auditPipeline, SnapshotProvider snapshotProvider, ToranaProperties properties) {
+        log.info("Torana audit trail initialized - table: '{}', schema-mode: {}",
+                properties.getTableName(), properties.getSchemaMode().name().toLowerCase().replace('_', '-'));
         return new AuditedActionAspect(auditPipeline, snapshotProvider);
     }
 }

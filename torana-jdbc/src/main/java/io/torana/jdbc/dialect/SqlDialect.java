@@ -54,4 +54,28 @@ public interface SqlDialect {
      * @return the dialect name
      */
     String name();
+
+    /**
+     * Returns the CREATE TABLE SQL for the audit entries table.
+     *
+     * @param tableName the table name
+     * @return the CREATE TABLE SQL statement
+     */
+    String getCreateTableSql(String tableName);
+
+    /**
+     * Returns the DROP TABLE SQL for the audit entries table.
+     *
+     * @param tableName the table name
+     * @return the DROP TABLE SQL statement
+     */
+    String getDropTableSql(String tableName);
+
+    /**
+     * Returns SQL to check if the table exists.
+     *
+     * @param tableName the table name
+     * @return SQL that returns a row if table exists
+     */
+    String getTableExistsSql(String tableName);
 }

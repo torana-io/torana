@@ -17,7 +17,7 @@ import org.springframework.web.context.request.RequestContextHolder;
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnClass(RequestContextHolder.class)
+@ConditionalOnClass({RequestContextHolder.class, WebMvcRequestContextResolver.class})
 public class ToranaWebMvcAutoConfiguration {
 
     @Bean

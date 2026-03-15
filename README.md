@@ -41,25 +41,32 @@ Torana fills a different gap:
 - Keep the **core framework-agnostic** and Spring integration natural.
 - Keep overhead **predictable and bounded**.
 
-## Installation
+## Quick Start
 
-Add the starter dependency to your project:
+### 1. Add the dependency
 
 **Maven:**
 ```xml
 <dependency>
     <groupId>io.torana</groupId>
     <artifactId>torana-spring-boot-starter</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.3</version>
 </dependency>
 ```
 
 **Gradle:**
 ```groovy
-implementation 'io.torana:torana-spring-boot-starter:0.1.0'
+implementation 'io.torana:torana-spring-boot-starter:0.1.3'
 ```
 
-That's it! The starter includes all necessary modules.
+### 2. That's it!
+
+Torana auto-configures everything:
+- Detects your database (PostgreSQL, MySQL, or H2)
+- Creates the `audit_entries` table automatically
+- Starts capturing `@AuditedAction` annotated methods
+
+No additional configuration required. Just annotate your business methods.
 
 ## Example usage
 
@@ -84,6 +91,47 @@ The goal is that a team can later query something like:
 - tenant = `acme`
 - requestId = `req-456`
 - traceId = `trace-789`
+
+## Configuration
+
+Torana works out of the box with sensible defaults. All settings are optional:
+
+```yaml
+torana:
+  enabled: true           # Enable/disable audit trail (default: true)
+  table-name: audit_entries  # Table name (default: audit_entries)
+  schema-mode: create     # Schema management: none, create, create-drop (default: create)
+
+  redaction:
+    enabled: true         # Enable sensitive data redaction (default: true)
+    placeholder: "[REDACTED]"
+    patterns:             # Regex patterns for field names to redact
+      - "(?i)password"
+      - "(?i)secret"
+      - "(?i)token"
+      - "(?i)ssn"
+
+  snapshot:
+    max-depth: 3          # Max object traversal depth (default: 3)
+```
+
+### Schema Modes
+
+| Mode | Description |
+|------|-------------|
+| `create` | Creates table if it doesn't exist (default) |
+| `none` | No automatic schema management - you manage the table |
+| `create-drop` | Creates on startup, drops on shutdown (for testing) |
+
+### Database Support
+
+Torana automatically detects and configures the appropriate SQL dialect:
+
+| Database | Dialect | JSON Storage |
+|----------|---------|--------------|
+| PostgreSQL | `PostgreSqlDialect` | JSONB |
+| MySQL 8+ | `MySqlDialect` | JSON |
+| H2 | `H2Dialect` | CLOB |
 
 ## Planned module structure
 

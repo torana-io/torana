@@ -15,7 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * <p>Provides actor resolution from SecurityContext when Spring Security is present.
  */
 @AutoConfiguration
-@ConditionalOnClass(SecurityContextHolder.class)
+@ConditionalOnClass({SecurityContextHolder.class, SecurityContextActorResolver.class})
 public class ToranaSecurityAutoConfiguration {
 
     @Bean
