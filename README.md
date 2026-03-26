@@ -182,14 +182,7 @@ The long-term vision is:
 
 ## Documentation
 
-Start here:
-
-- `docs/00-vision/vision.md`
-- `docs/00-vision/design-principles.md`
-- `docs/02-architecture/architecture-overview.md`
-- `docs/02-architecture/module-structure.md`
-- `docs/05-competitive-analysis/versus-envers.md`
-- `docs/05-competitive-analysis/versus-jpa-auditing.md`
+Coming Soon...
 
 ## Contributing
 
