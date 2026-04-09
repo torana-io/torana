@@ -218,6 +218,39 @@ Before opening a pull request, make sure:
 - the change is scoped and understandable
 - any major design trade-offs are explained
 
+## Branch naming
+
+Branch names should follow the pattern `<type>/<short-description>` using kebab-case.
+
+### Patterns
+
+| Pattern | Purpose | Example |
+|---------|---------|---------|
+| `feat/*` | New features | `feat/oauth2-resolver` |
+| `fix/*` | Bug fixes | `fix/null-actor-handling` |
+| `docs/*` | Documentation | `docs/installation-guide` |
+| `chore/*` | Maintenance | `chore/update-spring-boot` |
+| `refactor/*` | Refactoring | `refactor/audit-pipeline` |
+| `test/*` | Test improvements | `test/jdbc-integration` |
+| `perf/*` | Performance | `perf/batch-insert` |
+
+### Rules
+
+- Use lowercase with hyphens (kebab-case)
+- Keep descriptions short but descriptive
+- Avoid special characters except hyphens
+- Branch type should match the primary commit type
+
+### Examples
+
+```
+feat/tenant-filtering
+fix/postgres-jsonb-serialization
+docs/query-executor-examples
+chore/upgrade-testcontainers-2
+refactor/extract-dialect-interface
+```
+
 ## Commit messages
 
 We use [Conventional Commits](https://www.conventionalcommits.org/) for automated versioning and changelog generation.
