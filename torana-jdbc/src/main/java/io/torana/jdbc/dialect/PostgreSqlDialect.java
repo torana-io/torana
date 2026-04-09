@@ -15,7 +15,7 @@ public class PostgreSqlDialect implements SqlDialect {
                 trace_id, span_id, parent_span_id,
                 metadata, changes, error_message, schema_version
             ) VALUES (
-                ?, ?, ?, ?,
+                ?::uuid, ?, ?, ?,
                 ?, ?, ?,
                 ?, ?,
                 ?, ?, ?,
