@@ -27,8 +27,8 @@ import javax.sql.DataSource;
 class JdbcAuditWriterMySqlIT {
 
     @Container
-    static MySQLContainer<?> mysql =
-            new MySQLContainer<>("mysql:8.0")
+    static MySQLContainer mysql =
+            new MySQLContainer("mysql:8.0")
                     .withDatabaseName("torana_test")
                     .withUsername("test")
                     .withPassword("test");
