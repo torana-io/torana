@@ -18,20 +18,11 @@
         </license>
     </licenses>
 
-    <developers>
-        <developer>
-            <id>poltrujillo</id>
-            <name>Pol Trujillo</name>
-        </developer>
-    </developers>
-
     <scm>
         <connection>scm:git:git://github.com/torana-io/torana.git</connection>
         <developerConnection>scm:git:ssh://github.com:torana-io/torana.git</developerConnection>
         <url>https://github.com/torana-io/torana/tree/main</url>
     </scm>
-
-    <!-- Publishing is handled by central-publishing-maven-plugin -->
 
     <modules>
         <module>torana-api</module>
@@ -301,7 +292,6 @@
                     </executions>
                 </plugin>
 
-                <!-- Central Portal Publishing (new method) -->
                 <plugin>
                     <groupId>org.sonatype.central</groupId>
                     <artifactId>central-publishing-maven-plugin</artifactId>
