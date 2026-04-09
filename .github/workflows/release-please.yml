@@ -40,26 +40,43 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { data: checkRuns } = await github.rest.checks.listForRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: context.sha,
-              check_name: 'build'
-            });
+            const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+            const maxAttempts = 40;
+            const delayMs = 30000;
+            let buildCheck;
 
-            const buildCheck = checkRuns.check_runs.find(run => run.name === 'build');
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+              const { data: checkRuns } = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.sha,
+                check_name: 'build'
+              });
 
-            if (!buildCheck) {
-              core.setFailed('CI build check not found for this commit. Aborting release.');
-              return;
+              buildCheck = checkRuns.check_runs.find(run => run.name === 'build');
+
+              if (!buildCheck) {
+                console.log(`Attempt ${attempt}/${maxAttempts}: build check not found yet.`);
+              } else if (buildCheck.status !== 'completed') {
+                console.log(
+                  `Attempt ${attempt}/${maxAttempts}: build check status is ${buildCheck.status}. Waiting...`
+                );
+              } else if (buildCheck.conclusion === 'success') {
+                console.log('CI build check passed. Proceeding with release.');
+                return;
+              } else {
+                core.setFailed(
+                  `CI build check completed with conclusion: ${buildCheck.conclusion}. Aborting release.`
+                );
+                return;
+              }
+
+              if (attempt < maxAttempts) {
+                await sleep(delayMs);
+              }
             }
 
-            if (buildCheck.conclusion !== 'success') {
-              core.setFailed(`CI build check did not pass (status: ${buildCheck.conclusion}). Aborting release.`);
-              return;
-            }
-
-            console.log('CI build check passed. Proceeding with release.');
+            core.setFailed('Timed out waiting for the CI build check to complete.');
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
