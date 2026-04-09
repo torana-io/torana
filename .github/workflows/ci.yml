@@ -133,7 +133,7 @@ jobs:
         if: always()
         uses: test-summary/action@v2
         with:
-          paths: '**/target/failsafe-reports/*.xml'
+          paths: '**/target/failsafe-reports/TEST-*.xml'
 
       - name: Upload integration test reports on failure
         if: failure()

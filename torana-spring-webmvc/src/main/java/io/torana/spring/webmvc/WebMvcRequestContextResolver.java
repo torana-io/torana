@@ -46,7 +46,7 @@ public class WebMvcRequestContextResolver implements RequestContextResolver {
     }
 
     public WebMvcRequestContextResolver(Set<String> capturedHeaders) {
-        this.capturedHeaders = capturedHeaders;
+        this.capturedHeaders = Set.copyOf(capturedHeaders);
     }
 
     @Override
