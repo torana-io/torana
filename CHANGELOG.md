@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7](https://github.com/torana-io/torana/compare/v0.1.6...v0.1.7) (2026-04-09)
+
+
+### Features
+
+* Improve ci/cd pipelines for better release ([711571d](https://github.com/torana-io/torana/commit/711571d2e56ff6085e940362686148cc39ffe1e2))
+
 ## [0.1.6](https://github.com/torana-io/torana/compare/v0.1.5...v0.1.6) (2026-04-09)
 
 
