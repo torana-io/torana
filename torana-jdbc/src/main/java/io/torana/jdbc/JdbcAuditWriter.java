@@ -118,7 +118,7 @@ public class JdbcAuditWriter implements AuditWriter {
                 entries.size(),
                 (ps, entry) -> {
                     int idx = 1;
-                    ps.setObject(idx++, entry.id());
+                    ps.setString(idx++, entry.id().toString());
                     ps.setString(idx++, entry.action().name());
                     ps.setTimestamp(idx++, Timestamp.from(entry.occurredAt()));
                     ps.setString(idx++, entry.outcome().name());
