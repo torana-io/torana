@@ -48,4 +48,13 @@
         <Bug pattern="EI_EXPOSE_REP2"/>
         <Class name="~io\.torana\.api\.model\..*"/>
     </Match>
+
+    <!-- Allow storing collaborators via dependency injection in core classes -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+        <Or>
+            <Class name="io.torana.core.AuditPipeline"/>
+            <Class name="io.torana.core.DefaultTransactionAwareWriter"/>
+        </Or>
+    </Match>
 </FindBugsFilter>
