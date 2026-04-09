@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.10](https://github.com/torana-io/torana/compare/v0.1.9...v0.1.10) (2026-04-09)
+
+
+### Documentation
+
+* Update CONTRIBUTING.md and README.md with release process links; add RELEASING.md for release guidelines ([c012aeb](https://github.com/torana-io/torana/commit/c012aeb22e361e291d6b1169259890f7518e36dd))
+
 ## [0.1.9](https://github.com/torana-io/torana/compare/v0.1.8...v0.1.9) (2026-04-09)
 
 
