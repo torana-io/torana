@@ -56,7 +56,15 @@
             <Class name="io.torana.core.AuditPipeline"/>
             <Class name="io.torana.core.DefaultTransactionAwareWriter"/>
             <Class name="io.torana.spring.aop.SpringTransactionAwareWriter"/>
+            <Class name="io.torana.micrometer.MicrometerTraceResolver"/>
+            <Class name="~io\.torana\.spring\.boot\.autoconfigure\..*"/>
         </Or>
+    </Match>
+
+    <!-- Spring Boot configuration properties require mutable getters/setters -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Class name="~io\.torana\.spring\.boot\.autoconfigure\..*Properties.*"/>
     </Match>
 
     <!-- SQL strings should use \n not %n for consistent cross-platform SQL -->
