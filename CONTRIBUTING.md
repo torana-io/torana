@@ -2,6 +2,8 @@
 
 Thanks for contributing.
 
+For release and merge timing, see [RELEASING.md](RELEASING.md).
+
 Torana is intended to be a serious infrastructure library, so contributions should preserve clarity, correctness, and long-term maintainability.
 
 ## Before contributing

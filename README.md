@@ -182,7 +182,8 @@ The long-term vision is:
 
 ## Documentation
 
-Coming Soon...
+- Release process: [RELEASING.md](RELEASING.md)
+- Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Contributing
 
@@ -191,4 +192,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## License
 
 Apache License 2.0 - see [LICENSE](LICENSE) for details.
-
