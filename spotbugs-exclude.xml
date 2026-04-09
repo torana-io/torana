@@ -49,12 +49,19 @@
         <Class name="~io\.torana\.api\.model\..*"/>
     </Match>
 
-    <!-- Allow storing collaborators via dependency injection in core classes -->
+    <!-- Allow storing collaborators via dependency injection in wrapper/adapter classes -->
     <Match>
         <Bug pattern="EI_EXPOSE_REP2"/>
         <Or>
             <Class name="io.torana.core.AuditPipeline"/>
             <Class name="io.torana.core.DefaultTransactionAwareWriter"/>
+            <Class name="io.torana.spring.aop.SpringTransactionAwareWriter"/>
         </Or>
+    </Match>
+
+    <!-- SQL strings should use \n not %n for consistent cross-platform SQL -->
+    <Match>
+        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
+        <Class name="~io\.torana\.jdbc\.dialect\..*Dialect"/>
     </Match>
 </FindBugsFilter>
