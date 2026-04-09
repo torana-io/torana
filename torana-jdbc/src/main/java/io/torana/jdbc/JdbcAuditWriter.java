@@ -74,7 +74,7 @@ public class JdbcAuditWriter implements AuditWriter {
 
         jdbcTemplate.update(
                 sql,
-                entry.id(),
+                entry.id().toString(),
                 entry.action().name(),
                 Timestamp.from(entry.occurredAt()),
                 entry.outcome().name(),
