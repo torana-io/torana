@@ -50,23 +50,44 @@ Torana fills a different gap:
 <dependency>
     <groupId>io.torana</groupId>
     <artifactId>torana-spring-boot-starter</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.10</version>
 </dependency>
 ```
 
 **Gradle:**
 ```groovy
-implementation 'io.torana:torana-spring-boot-starter:0.1.3'
+implementation 'io.torana:torana-spring-boot-starter:0.1.10'
 ```
 
-### 2. That's it!
+### 2. Create the audit table
 
-Torana auto-configures everything:
+Torana requires an `audit_entries` table. Choose your approach:
+
+**Option A: Use official migrations with Flyway or Liquibase (recommended)**
+
+Torana provides official migration files for all supported databases:
+- `torana-jdbc/src/main/resources/db/migration/postgresql/V1__create_audit_entries_table.sql`
+- `torana-jdbc/src/main/resources/db/migration/mysql/V1__create_audit_entries_table.sql`
+- `torana-jdbc/src/main/resources/db/migration/h2/V1__create_audit_entries_table.sql`
+
+Copy the appropriate file to your project's `src/main/resources/db/migration/` directory.
+
+See [Schema Management](docs/schema-management.md) for detailed setup instructions.
+
+**Option B: Let Torana create it (development/testing only)**
+
+```yaml
+torana:
+  schema-mode: create
+```
+
+### 3. That's it!
+
+Torana auto-configures everything else:
 - Detects your database (PostgreSQL, MySQL, or H2)
-- Creates the `audit_entries` table automatically
 - Starts capturing `@AuditedAction` annotated methods
 
-No additional configuration required. Just annotate your business methods.
+Just annotate your business methods.
 
 ## Example usage
 
@@ -100,7 +121,7 @@ Torana works out of the box with sensible defaults. All settings are optional:
 torana:
   enabled: true           # Enable/disable audit trail (default: true)
   table-name: audit_entries  # Table name (default: audit_entries)
-  schema-mode: create     # Schema management: none, create, create-drop (default: create)
+  schema-mode: none       # Schema management: none, create, create-drop (default: none)
 
   redaction:
     enabled: true         # Enable sensitive data redaction (default: true)
@@ -115,13 +136,40 @@ torana:
     max-depth: 3          # Max object traversal depth (default: 3)
 ```
 
-### Schema Modes
+### Schema Management
 
-| Mode | Description |
-|------|-------------|
-| `create` | Creates table if it doesn't exist (default) |
-| `none` | No automatic schema management - you manage the table |
-| `create-drop` | Creates on startup, drops on shutdown (for testing) |
+Torana defaults to `schema-mode: none`, expecting you to manage the audit table schema yourself.
+
+**Recommended approach by environment:**
+
+| Environment | Mode | Migration Tool |
+|-------------|------|----------------|
+| **Production** | `none` | Flyway or Liquibase |
+| **Development** | `create` | (optional) Torana auto-create |
+| **Testing** | `create-drop` | Torana auto-create/drop |
+
+#### Schema Modes
+
+| Mode | Behavior | Use Case |
+|------|----------|----------|
+| `none` | No automatic schema management (default) | Production - manage with Flyway/Liquibase |
+| `create` | Creates table if it doesn't exist | Local development and exploration |
+| `create-drop` | Creates on startup, drops on shutdown | Integration tests |
+
+#### Official Migration Files
+
+Torana provides versioned migration files for all supported databases:
+
+```
+torana-jdbc/src/main/resources/db/migration/
+├── postgresql/V1__create_audit_entries_table.sql
+├── mysql/V1__create_audit_entries_table.sql
+└── h2/V1__create_audit_entries_table.sql
+```
+
+For detailed setup instructions, migration strategies, and schema evolution policies, see:
+- [Schema Management Guide](docs/schema-management.md)
+- [Database Migrations](docs/migrations.md)
 
 ### Database Support
 
@@ -151,7 +199,9 @@ torana-test
 
 ## Current status
 
-Torana has completed its initial development phase and is ready for production use.
+Torana is an early production-candidate library for Spring Boot teams that want explicit business-action audit trails.
+
+It is suitable for controlled adoption and pilot usage. Before using it in critical systems, review the transaction semantics, schema management, redaction configuration, and migration policy.
 
 Features include:
 
@@ -182,6 +232,8 @@ The long-term vision is:
 
 ## Documentation
 
+- Schema management: [docs/schema-management.md](docs/schema-management.md)
+- Database migrations: [docs/migrations.md](docs/migrations.md)
 - Release process: [RELEASING.md](RELEASING.md)
 - Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 

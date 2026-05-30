@@ -15,12 +15,12 @@ public class ToranaProperties {
     /**
      * Schema initialization mode.
      * <ul>
-     *   <li>{@code none} - No schema initialization (default)</li>
-     *   <li>{@code create} - Create schema if it doesn't exist</li>
-     *   <li>{@code create-drop} - Create schema on startup, drop on shutdown</li>
+     *   <li>{@code none} - No schema initialization (default, use Flyway/Liquibase)</li>
+     *   <li>{@code create} - Create schema if it doesn't exist (development)</li>
+     *   <li>{@code create-drop} - Create schema on startup, drop on shutdown (testing)</li>
      * </ul>
      */
-    private SchemaMode schemaMode = SchemaMode.CREATE;
+    private SchemaMode schemaMode = SchemaMode.NONE;
 
     /** Redaction configuration. */
     private RedactionProperties redaction = new RedactionProperties();

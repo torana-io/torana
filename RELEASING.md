@@ -2,6 +2,17 @@
 
 This project uses Release Please to manage releases and the next development snapshot.
 
+## Version Management
+
+The project uses a single source of truth for versioning:
+
+- The `<version>` tag in the parent `pom.xml` is the authoritative version
+- Release Please automatically updates this version and all child module versions
+- The `.release-please-manifest.json` tracks the last released version
+- README should always reference the latest stable release (non-SNAPSHOT) version
+
+Do not use CI-friendly `${revision}` properties. All versions are explicit.
+
 The process creates two different pull requests around each release:
 
 - `chore(main): release X.Y.Z`
