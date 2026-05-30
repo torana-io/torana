@@ -1,5 +1,8 @@
 package io.torana.spring.boot.autoconfigure;
 
+import io.torana.core.AuditErrorPolicy;
+import io.torana.core.TransactionAwareWriter.WritePolicy;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /** Configuration properties for Torana audit trail. */
@@ -27,6 +30,9 @@ public class ToranaProperties {
 
     /** Snapshot configuration for change tracking. */
     private SnapshotProperties snapshot = new SnapshotProperties();
+
+    /** Transaction configuration for audit writes. */
+    private TransactionProperties transaction = new TransactionProperties();
 
     /** Schema initialization modes. */
     public enum SchemaMode {
@@ -76,6 +82,14 @@ public class ToranaProperties {
 
     public void setSnapshot(SnapshotProperties snapshot) {
         this.snapshot = snapshot;
+    }
+
+    public TransactionProperties getTransaction() {
+        return transaction;
+    }
+
+    public void setTransaction(TransactionProperties transaction) {
+        this.transaction = transaction;
     }
 
     /** Redaction configuration. */
@@ -135,6 +149,74 @@ public class ToranaProperties {
 
         public void setMaxDepth(int maxDepth) {
             this.maxDepth = maxDepth;
+        }
+    }
+
+    /** Transaction configuration for controlling audit write behavior. */
+    public static class TransactionProperties {
+
+        /**
+         * Write policy for successful operations.
+         *
+         * <p>Controls when audit entries for successful operations are persisted:
+         *
+         * <ul>
+         *   <li>{@code after_commit} (default) - Write after transaction commits, preventing
+         *       orphaned audit records
+         *   <li>{@code immediate} - Write immediately, even if transaction later rolls back
+         *   <li>{@code requires_new} - Write in separate transaction, survives parent rollback
+         * </ul>
+         */
+        private WritePolicy successWritePolicy = WritePolicy.AFTER_COMMIT;
+
+        /**
+         * Write policy for failed operations.
+         *
+         * <p>Controls when audit entries for failed operations are persisted:
+         *
+         * <ul>
+         *   <li>{@code immediate} (default) - Write immediately to capture the attempt
+         *   <li>{@code after_commit} - Write only if transaction commits (unusual for failures)
+         *   <li>{@code requires_new} - Write in separate transaction, survives parent rollback
+         * </ul>
+         */
+        private WritePolicy failureWritePolicy = WritePolicy.IMMEDIATE;
+
+        /**
+         * Error handling policy for audit processing failures.
+         *
+         * <p>Determines what happens when audit processing fails:
+         *
+         * <ul>
+         *   <li>{@code log_and_continue} (default) - Log error, allow business operation to proceed
+         *   <li>{@code fail_transaction} - Throw exception to fail the business transaction
+         *   <li>{@code callback} - Invoke custom {@code AuditErrorHandler} to decide
+         * </ul>
+         */
+        private AuditErrorPolicy auditErrorPolicy = AuditErrorPolicy.LOG_AND_CONTINUE;
+
+        public WritePolicy getSuccessWritePolicy() {
+            return successWritePolicy;
+        }
+
+        public void setSuccessWritePolicy(WritePolicy successWritePolicy) {
+            this.successWritePolicy = successWritePolicy;
+        }
+
+        public WritePolicy getFailureWritePolicy() {
+            return failureWritePolicy;
+        }
+
+        public void setFailureWritePolicy(WritePolicy failureWritePolicy) {
+            this.failureWritePolicy = failureWritePolicy;
+        }
+
+        public AuditErrorPolicy getAuditErrorPolicy() {
+            return auditErrorPolicy;
+        }
+
+        public void setAuditErrorPolicy(AuditErrorPolicy auditErrorPolicy) {
+            this.auditErrorPolicy = auditErrorPolicy;
         }
     }
 }

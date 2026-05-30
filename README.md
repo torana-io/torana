@@ -113,6 +113,16 @@ The goal is that a team can later query something like:
 - requestId = `req-456`
 - traceId = `trace-789`
 
+## Transaction Behavior
+
+By default, Torana writes:
+- **Success entries** after transaction commit (prevents orphaned records)
+- **Failure entries** immediately (captures the attempt)
+
+Audit failures are logged but don't affect your business operations.
+
+See [Transaction Semantics Guide](docs/transaction-semantics.md) for detailed configuration.
+
 ## Configuration
 
 Torana works out of the box with sensible defaults. All settings are optional:

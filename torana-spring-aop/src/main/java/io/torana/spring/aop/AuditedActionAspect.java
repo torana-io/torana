@@ -133,13 +133,8 @@ public class AuditedActionAspect {
                 context.setAfterSnapshot(snapshotProvider.capture(snapshotSource));
             }
 
-            try {
-                auditPipeline.process(context);
-            } catch (Exception e) {
-                log.warn("Failed to write audit entry for action '{}': {}",
-                        context.getAction() != null ? context.getAction().name() : "unknown",
-                        e.getMessage(), e);
-            }
+            // Pipeline handles errors internally based on configured AuditErrorPolicy
+            auditPipeline.process(context);
         }
 
         return result;

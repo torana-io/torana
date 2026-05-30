@@ -11,6 +11,7 @@ import io.torana.jdbc.JdbcAuditWriter;
 import io.torana.jdbc.dialect.DialectDetector;
 import io.torana.jdbc.dialect.SqlDialect;
 import io.torana.spi.ActorResolver;
+import io.torana.spi.AuditErrorHandler;
 import io.torana.spi.AuditWriter;
 import io.torana.spi.DiffEngine;
 import io.torana.spi.RedactionPolicy;
@@ -24,6 +25,7 @@ import io.torana.spring.aop.SpringTransactionAwareWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -33,6 +35,7 @@ import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -97,8 +100,18 @@ public class ToranaAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnBean(AuditWriter.class)
     @ConditionalOnClass(TransactionSynchronizationManager.class)
-    public TransactionAwareWriter toranaTransactionAwareWriter(AuditWriter auditWriter) {
-        return new SpringTransactionAwareWriter(auditWriter);
+    public TransactionAwareWriter toranaTransactionAwareWriter(
+            AuditWriter auditWriter,
+            ToranaProperties properties,
+            @Autowired(required = false) PlatformTransactionManager transactionManager) {
+
+        ToranaProperties.TransactionProperties txProps = properties.getTransaction();
+
+        return new SpringTransactionAwareWriter(
+                auditWriter,
+                txProps.getSuccessWritePolicy(),
+                txProps.getFailureWritePolicy(),
+                transactionManager);
     }
 
     @Bean
@@ -149,9 +162,19 @@ public class ToranaAutoConfiguration {
             ContextCollector contextCollector,
             AuditEntryFactory entryFactory,
             RedactionPolicy redactionPolicy,
-            TransactionAwareWriter transactionAwareWriter) {
+            TransactionAwareWriter transactionAwareWriter,
+            ToranaProperties properties,
+            @Autowired(required = false) AuditErrorHandler errorHandler) {
+
+        ToranaProperties.TransactionProperties txProps = properties.getTransaction();
+
         return new AuditPipeline(
-                contextCollector, entryFactory, redactionPolicy, transactionAwareWriter);
+                contextCollector,
+                entryFactory,
+                redactionPolicy,
+                transactionAwareWriter,
+                txProps.getAuditErrorPolicy(),
+                errorHandler);
     }
 
     @Bean
