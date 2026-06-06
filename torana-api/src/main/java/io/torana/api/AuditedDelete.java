@@ -44,7 +44,6 @@ import java.lang.annotation.Target;
  * @see AuditedCreate
  * @see AuditedUpdate
  */
-@AuditedAction(value = "entity.deleted")
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

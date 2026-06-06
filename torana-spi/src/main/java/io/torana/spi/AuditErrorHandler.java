@@ -1,7 +1,6 @@
 package io.torana.spi;
 
 import io.torana.api.model.AuditEntry;
-import io.torana.core.AuditContext;
 
 /**
  * SPI for handling audit processing errors.
@@ -21,8 +20,7 @@ import io.torana.core.AuditContext;
  *     private final MetricRegistry metrics;
  *
  *     @Override
- *     public void handleError(AuditContext context, AuditEntry entry,
- *                           Exception error, ErrorPhase phase) {
+ *     public void handleError(AuditEntry entry, Exception error, ErrorPhase phase) {
  *         // Log to external monitoring
  *         metrics.counter("audit.errors", "phase", phase.name()).increment();
  *
@@ -52,13 +50,12 @@ public interface AuditErrorHandler {
      * will be rolled back (if still active). To allow the business operation to continue, this
      * method should not throw.
      *
-     * @param context the audit context being processed (may be incomplete if error occurred early)
      * @param entry the audit entry (may be null if error occurred before entry creation)
      * @param error the exception that occurred during audit processing
      * @param phase the phase where the error occurred
      * @throws Exception if the business transaction should fail
      */
-    void handleError(AuditContext context, AuditEntry entry, Exception error, ErrorPhase phase)
+    void handleError(AuditEntry entry, Exception error, ErrorPhase phase)
             throws Exception;
 
     /**

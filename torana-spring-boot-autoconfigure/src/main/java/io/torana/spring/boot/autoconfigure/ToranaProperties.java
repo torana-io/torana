@@ -34,6 +34,9 @@ public class ToranaProperties {
     /** Transaction configuration for audit writes. */
     private TransactionProperties transaction = new TransactionProperties();
 
+    /** Metrics configuration for monitoring audit operations. */
+    private MetricsProperties metrics = new MetricsProperties();
+
     /** Schema initialization modes. */
     public enum SchemaMode {
         /** No automatic schema creation. */
@@ -90,6 +93,14 @@ public class ToranaProperties {
 
     public void setTransaction(TransactionProperties transaction) {
         this.transaction = transaction;
+    }
+
+    public MetricsProperties getMetrics() {
+        return metrics;
+    }
+
+    public void setMetrics(MetricsProperties metrics) {
+        this.metrics = metrics;
     }
 
     /** Redaction configuration. */
@@ -217,6 +228,73 @@ public class ToranaProperties {
 
         public void setAuditErrorPolicy(AuditErrorPolicy auditErrorPolicy) {
             this.auditErrorPolicy = auditErrorPolicy;
+        }
+    }
+
+    /** Metrics configuration for monitoring audit operations. */
+    public static class MetricsProperties {
+
+        /** Whether to enable Micrometer metrics collection for audit operations. */
+        private boolean enabled = true;
+
+        /**
+         * Whether to include detailed tags (action name, outcome) in metrics.
+         *
+         * <p>Enabling this provides more granular metrics but may increase cardinality
+         * significantly, especially if you have many unique action names.
+         *
+         * <p>Consider enabling only in development or staging environments, or when you have
+         * a small, controlled set of action names.
+         */
+        private boolean includeDetailedTags = false;
+
+        /**
+         * Time window in seconds for health check statistics.
+         *
+         * <p>The health indicator tracks error rates within this window to determine health status.
+         */
+        private int healthCheckWindowSeconds = 60;
+
+        /**
+         * Error rate threshold (0.0 to 1.0) that triggers a health check warning.
+         *
+         * <p>When the error rate exceeds this threshold within the health check window,
+         * the health indicator will report a WARNING status.
+         *
+         * <p>Default: 0.1 (10% error rate)
+         */
+        private double errorRateThreshold = 0.1;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public boolean isIncludeDetailedTags() {
+            return includeDetailedTags;
+        }
+
+        public void setIncludeDetailedTags(boolean includeDetailedTags) {
+            this.includeDetailedTags = includeDetailedTags;
+        }
+
+        public int getHealthCheckWindowSeconds() {
+            return healthCheckWindowSeconds;
+        }
+
+        public void setHealthCheckWindowSeconds(int healthCheckWindowSeconds) {
+            this.healthCheckWindowSeconds = healthCheckWindowSeconds;
+        }
+
+        public double getErrorRateThreshold() {
+            return errorRateThreshold;
+        }
+
+        public void setErrorRateThreshold(double errorRateThreshold) {
+            this.errorRateThreshold = errorRateThreshold;
         }
     }
 }

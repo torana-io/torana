@@ -172,7 +172,7 @@ public class AuditPipeline {
             case CALLBACK -> {
                 if (errorHandler != null) {
                     try {
-                        errorHandler.handleError(context, entry, error, phase);
+                        errorHandler.handleError(entry, error, phase);
                     } catch (Exception handlerError) {
                         log.error(
                                 "Custom audit error handler threw exception while handling {} phase"

@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -88,10 +89,20 @@ public class ToranaAutoConfiguration {
         return new ToranaSchemaInitializer(jdbcTemplate, dialect, properties);
     }
 
+    /**
+     * Creates the delegate audit writer (JDBC-based).
+     *
+     * <p>This bean is qualified as "delegateAuditWriter" to allow other components
+     * (like MetricsAuditWriter) to decorate it without causing circular dependencies.
+     *
+     * <p>The actual primary AuditWriter bean may be a decorated version if metrics
+     * are enabled (see ToranaMicrometerAutoConfiguration).
+     */
     @Bean
-    @ConditionalOnMissingBean(AuditWriter.class)
+    @Qualifier("delegateAuditWriter")
+    @ConditionalOnMissingBean(name = "delegateAuditWriter")
     @ConditionalOnBean({JdbcTemplate.class, SqlDialect.class})
-    public AuditWriter toranaAuditWriter(
+    public AuditWriter delegateAuditWriter(
             JdbcTemplate jdbcTemplate, SqlDialect dialect, ToranaProperties properties) {
         return new JdbcAuditWriter(jdbcTemplate, dialect, properties.getTableName());
     }
