@@ -42,6 +42,7 @@
         <module>torana-spring-security</module>
         <module>torana-spring-webmvc</module>
         <module>torana-micrometer</module>
+        <module>torana-resilience</module>
         <module>torana-spring-boot-autoconfigure</module>
         <module>torana-spring-boot-starter</module>
         <module>torana-test</module>
@@ -108,6 +109,11 @@
             <dependency>
                 <groupId>io.torana</groupId>
                 <artifactId>torana-micrometer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.torana</groupId>
+                <artifactId>torana-resilience</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
