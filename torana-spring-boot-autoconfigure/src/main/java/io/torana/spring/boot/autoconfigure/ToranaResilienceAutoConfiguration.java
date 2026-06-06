@@ -1,5 +1,6 @@
 package io.torana.spring.boot.autoconfigure;
 
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.retry.Retry;
@@ -240,8 +241,10 @@ public class ToranaResilienceAutoConfiguration {
                     RetryConfig.custom()
                             .maxAttempts(retryProps.getMaxAttempts())
                             .waitDuration(Duration.ofMillis(retryProps.getWaitDurationMillis()))
-                            .exponentialBackoffMultiplier(
-                                    retryProps.getExponentialBackoffMultiplier())
+                            .intervalFunction(
+                                    IntervalFunction.ofExponentialBackoff(
+                                            Duration.ofMillis(retryProps.getWaitDurationMillis()),
+                                            retryProps.getExponentialBackoffMultiplier()))
                             .build();
 
             return Retry.of("toranaAuditWriter", config);

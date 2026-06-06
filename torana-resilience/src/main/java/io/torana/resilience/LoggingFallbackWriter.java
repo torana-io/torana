@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.torana.api.AuditEntry;
+import io.torana.api.model.AuditEntry;
+import io.torana.api.model.RequestContext;
+import io.torana.api.model.TraceContext;
 import io.torana.spi.FallbackAuditWriter;
 
 import org.slf4j.Logger;
@@ -99,20 +101,20 @@ public class LoggingFallbackWriter implements FallbackAuditWriter {
             log.error(
                     "{} Failed to serialize audit entry (id={}, action={}): {}",
                     LOG_PREFIX,
-                    entry.getId(),
-                    entry.getAction(),
+                    entry.id(),
+                    entry.action(),
                     e.getMessage());
 
             // Last-resort fallback: log basic details without serialization
             log.info(
                     "{} action={}, actor={}, target={}:{}, outcome={}, occurred_at={}",
                     LOG_PREFIX,
-                    entry.getAction(),
-                    entry.getActorId(),
-                    entry.getTargetType(),
-                    entry.getTargetId(),
-                    entry.getOutcome(),
-                    entry.getOccurredAt());
+                    entry.action(),
+                    entry.actor() == null ? null : entry.actor().id(),
+                    entry.target() == null ? null : entry.target().type(),
+                    entry.target() == null ? null : entry.target().id(),
+                    entry.outcome(),
+                    entry.occurredAt());
         }
     }
 
@@ -142,32 +144,32 @@ public class LoggingFallbackWriter implements FallbackAuditWriter {
     private String serializeToJson(AuditEntry entry) throws JsonProcessingException {
         // Create a flat map for easy parsing by log aggregation tools
         Map<String, Object> entryMap = new LinkedHashMap<>();
-        entryMap.put("id", entry.getId().toString());
-        entryMap.put("action", entry.getAction());
-        entryMap.put("actor_id", entry.getActorId());
-        entryMap.put("tenant_id", entry.getTenantId());
-        entryMap.put("target_type", entry.getTargetType());
-        entryMap.put("target_id", entry.getTargetId());
-        entryMap.put("outcome", entry.getOutcome());
-        entryMap.put("occurred_at", entry.getOccurredAt());
+        entryMap.put("id", entry.id().toString());
+        entryMap.put("action", entry.action().name());
+        entryMap.put("actor_id", entry.actor() == null ? null : entry.actor().id());
+        entryMap.put("tenant_id", entry.tenant() == null ? null : entry.tenant().id());
+        entryMap.put("target_type", entry.target() == null ? null : entry.target().type());
+        entryMap.put("target_id", entry.target() == null ? null : entry.target().id());
+        entryMap.put("outcome", entry.outcome().name());
+        entryMap.put("occurred_at", entry.occurredAt());
 
-        if (entry.getRequestId() != null) {
-            entryMap.put("request_id", entry.getRequestId());
+        RequestContext requestContext = entry.requestContext();
+        if (requestContext != null && requestContext.requestId() != null) {
+            entryMap.put("request_id", requestContext.requestId());
         }
-        if (entry.getTraceId() != null) {
-            entryMap.put("trace_id", entry.getTraceId());
+
+        TraceContext traceContext = entry.traceContext();
+        if (traceContext != null && traceContext.traceId() != null) {
+            entryMap.put("trace_id", traceContext.traceId());
         }
-        if (entry.getSpanId() != null) {
-            entryMap.put("span_id", entry.getSpanId());
+        if (traceContext != null && traceContext.spanId() != null) {
+            entryMap.put("span_id", traceContext.spanId());
         }
-        if (entry.getMetadata() != null && !entry.getMetadata().isEmpty()) {
-            entryMap.put("metadata", entry.getMetadata());
+        if (entry.metadata() != null && !entry.metadata().isEmpty()) {
+            entryMap.put("metadata", entry.metadata());
         }
-        if (entry.getBeforeSnapshot() != null) {
-            entryMap.put("before_snapshot", entry.getBeforeSnapshot());
-        }
-        if (entry.getAfterSnapshot() != null) {
-            entryMap.put("after_snapshot", entry.getAfterSnapshot());
+        if (entry.changes() != null && !entry.changes().isEmpty()) {
+            entryMap.put("changes", entry.changes());
         }
 
         return objectMapper.writeValueAsString(entryMap);

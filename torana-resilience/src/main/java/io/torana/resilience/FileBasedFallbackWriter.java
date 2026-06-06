@@ -3,7 +3,15 @@ package io.torana.resilience;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.torana.api.AuditEntry;
+import io.torana.api.model.Actor;
+import io.torana.api.model.AuditAction;
+import io.torana.api.model.AuditEntry;
+import io.torana.api.model.AuditOutcome;
+import io.torana.api.model.ChangeSet;
+import io.torana.api.model.RequestContext;
+import io.torana.api.model.Target;
+import io.torana.api.model.Tenant;
+import io.torana.api.model.TraceContext;
 import io.torana.spi.FallbackAuditWriter;
 
 import org.slf4j.Logger;
@@ -18,6 +26,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Fallback writer that writes audit entries to local JSON files.
@@ -117,8 +126,8 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
     public void writeFallback(AuditEntry entry) {
         try {
             // Generate filename: audit-{timestamp}-{uuid}.json
-            String timestamp = TIMESTAMP_FORMAT.format(entry.getOccurredAt());
-            String filename = String.format("audit-%s-%s.json", timestamp, entry.getId());
+            String timestamp = TIMESTAMP_FORMAT.format(entry.occurredAt());
+            String filename = String.format("audit-%s-%s.json", timestamp, entry.id());
             Path filePath = fallbackDirectory.resolve(filename);
 
             // Serialize entry to JSON
@@ -131,23 +140,23 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
             log.info(
                     "Wrote fallback audit entry to file: {} (action={}, id={})",
                     filename,
-                    entry.getAction(),
-                    entry.getId());
+                    entry.action(),
+                    entry.id());
 
         } catch (IOException e) {
             // Never throw from fallback - log error and continue
             log.error(
                     "Failed to write fallback file for audit entry (id={}, action={}): {}",
-                    entry.getId(),
-                    entry.getAction(),
+                    entry.id(),
+                    entry.action(),
                     e.getMessage(),
                     e);
         } catch (Exception e) {
             // Catch all exceptions to ensure fallback never fails the business operation
             log.error(
                     "Unexpected error writing fallback for audit entry (id={}, action={}): {}",
-                    entry.getId(),
-                    entry.getAction(),
+                    entry.id(),
+                    entry.action(),
                     e.getMessage(),
                     e);
         }
@@ -288,9 +297,8 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
             String traceId,
             String spanId,
             String parentSpanId,
-            String metadata,
-            String beforeSnapshot,
-            String afterSnapshot,
+            Map<String, Object> metadata,
+            ChangeSet changes,
             String errorMessage,
             Integer schemaVersion,
             Instant writtenAt) {
@@ -302,32 +310,133 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
          */
         public FallbackEntry(AuditEntry entry) {
             this(
-                    entry.getId().toString(),
-                    entry.getAction(),
-                    entry.getOccurredAt(),
-                    entry.getOutcome(),
-                    entry.getActorId(),
-                    entry.getActorType(),
-                    entry.getActorName(),
-                    entry.getTenantId(),
-                    entry.getTenantName(),
-                    entry.getTargetType(),
-                    entry.getTargetId(),
-                    entry.getTargetDisplayName(),
-                    entry.getRequestId(),
-                    entry.getRequestMethod(),
-                    entry.getRequestPath(),
-                    entry.getClientIp(),
-                    entry.getUserAgent(),
-                    entry.getTraceId(),
-                    entry.getSpanId(),
-                    entry.getParentSpanId(),
-                    entry.getMetadata(),
-                    entry.getBeforeSnapshot(),
-                    entry.getAfterSnapshot(),
-                    entry.getErrorMessage(),
-                    entry.getSchemaVersion(),
+                    entry.id().toString(),
+                    entry.action().name(),
+                    entry.occurredAt(),
+                    entry.outcome().name(),
+                    actorId(entry.actor()),
+                    actorType(entry.actor()),
+                    actorName(entry.actor()),
+                    tenantId(entry.tenant()),
+                    tenantName(entry.tenant()),
+                    targetType(entry.target()),
+                    targetId(entry.target()),
+                    targetDisplayName(entry.target()),
+                    requestId(entry.requestContext()),
+                    requestMethod(entry.requestContext()),
+                    requestPath(entry.requestContext()),
+                    clientIp(entry.requestContext()),
+                    userAgent(entry.requestContext()),
+                    traceId(entry.traceContext()),
+                    spanId(entry.traceContext()),
+                    parentSpanId(entry.traceContext()),
+                    entry.metadata(),
+                    entry.changes(),
+                    entry.errorMessage(),
+                    entry.schemaVersion(),
                     Instant.now());
+        }
+
+        public AuditEntry toAuditEntry() {
+            return AuditEntry.builder()
+                    .id(java.util.UUID.fromString(id))
+                    .action(AuditAction.of(action))
+                    .occurredAt(occurredAt)
+                    .outcome(AuditOutcome.valueOf(outcome))
+                    .actor(actor())
+                    .tenant(tenant())
+                    .target(target())
+                    .requestContext(requestContext())
+                    .traceContext(traceContext())
+                    .metadata(metadata)
+                    .changes(changes)
+                    .errorMessage(errorMessage)
+                    .schemaVersion(schemaVersion == null ? AuditEntry.CURRENT_SCHEMA_VERSION : schemaVersion)
+                    .build();
+        }
+
+        private Actor actor() {
+            return actorId == null ? null : new Actor(actorId, io.torana.api.model.ActorType.valueOf(actorType), actorName, Map.of());
+        }
+
+        private Tenant tenant() {
+            return tenantId == null ? null : Tenant.of(tenantId, tenantName);
+        }
+
+        private Target target() {
+            return targetType == null || targetId == null ? null : Target.of(targetType, targetId, targetDisplayName);
+        }
+
+        private RequestContext requestContext() {
+            return new RequestContext(requestId, requestMethod, requestPath, clientIp, userAgent, Map.of());
+        }
+
+        private TraceContext traceContext() {
+            return TraceContext.of(traceId, spanId, parentSpanId);
+        }
+
+        private static String actorId(Actor actor) {
+            return actor == null ? null : actor.id();
+        }
+
+        private static String actorType(Actor actor) {
+            return actor == null ? null : actor.type().name();
+        }
+
+        private static String actorName(Actor actor) {
+            return actor == null ? null : actor.displayName();
+        }
+
+        private static String tenantId(Tenant tenant) {
+            return tenant == null ? null : tenant.id();
+        }
+
+        private static String tenantName(Tenant tenant) {
+            return tenant == null ? null : tenant.name();
+        }
+
+        private static String targetType(Target target) {
+            return target == null ? null : target.type();
+        }
+
+        private static String targetId(Target target) {
+            return target == null ? null : target.id();
+        }
+
+        private static String targetDisplayName(Target target) {
+            return target == null ? null : target.displayName();
+        }
+
+        private static String requestId(RequestContext requestContext) {
+            return requestContext == null ? null : requestContext.requestId();
+        }
+
+        private static String requestMethod(RequestContext requestContext) {
+            return requestContext == null ? null : requestContext.method();
+        }
+
+        private static String requestPath(RequestContext requestContext) {
+            return requestContext == null ? null : requestContext.path();
+        }
+
+        private static String clientIp(RequestContext requestContext) {
+            return requestContext == null ? null : requestContext.clientIp();
+        }
+
+        private static String userAgent(RequestContext requestContext) {
+            return requestContext == null ? null : requestContext.userAgent();
+        }
+
+        private static String traceId(TraceContext traceContext) {
+            return traceContext == null ? null : traceContext.traceId();
+        }
+
+        private static String spanId(TraceContext traceContext) {
+            return traceContext == null ? null : traceContext.spanId();
+        }
+
+        private static String parentSpanId(TraceContext traceContext) {
+            return traceContext == null ? null : traceContext.parentSpanId();
         }
     }
 }

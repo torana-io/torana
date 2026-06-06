@@ -2,7 +2,7 @@ package io.torana.resilience;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.torana.api.AuditEntry;
+import io.torana.api.model.AuditEntry;
 import io.torana.spi.AuditWriter;
 import io.torana.spi.FallbackAuditWriter;
 

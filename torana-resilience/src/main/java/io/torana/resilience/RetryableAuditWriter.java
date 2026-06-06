@@ -1,8 +1,9 @@
 package io.torana.resilience;
 
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import io.torana.api.AuditEntry;
+import io.torana.api.model.AuditEntry;
 import io.torana.spi.AuditWriter;
 
 import org.slf4j.Logger;
@@ -112,7 +113,9 @@ public class RetryableAuditWriter implements AuditWriter {
                 RetryConfig.custom()
                         .maxAttempts(3)
                         .waitDuration(Duration.ofMillis(1000))
-                        .exponentialBackoffMultiplier(2.0)
+                        .intervalFunction(
+                                IntervalFunction.ofExponentialBackoff(
+                                        Duration.ofMillis(1000), 2.0))
                         .build();
 
         Retry retry = Retry.of("auditWriter", config);

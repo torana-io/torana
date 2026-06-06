@@ -1,6 +1,6 @@
 package io.torana.resilience;
 
-import io.torana.api.AuditEntry;
+import io.torana.api.model.AuditEntry;
 import io.torana.spi.AuditWriter;
 
 import org.slf4j.Logger;
@@ -9,10 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -223,32 +221,7 @@ public class AuditRecoveryService {
      * @return the reconstructed audit entry
      */
     private AuditEntry convertToAuditEntry(FileBasedFallbackWriter.FallbackEntry fallbackEntry) {
-        return new AuditEntry(
-                UUID.fromString(fallbackEntry.id()),
-                fallbackEntry.action(),
-                fallbackEntry.occurredAt(),
-                fallbackEntry.outcome(),
-                fallbackEntry.actorId(),
-                fallbackEntry.actorType(),
-                fallbackEntry.actorName(),
-                fallbackEntry.tenantId(),
-                fallbackEntry.tenantName(),
-                fallbackEntry.targetType(),
-                fallbackEntry.targetId(),
-                fallbackEntry.targetDisplayName(),
-                fallbackEntry.requestId(),
-                fallbackEntry.requestMethod(),
-                fallbackEntry.requestPath(),
-                fallbackEntry.clientIp(),
-                fallbackEntry.userAgent(),
-                fallbackEntry.traceId(),
-                fallbackEntry.spanId(),
-                fallbackEntry.parentSpanId(),
-                fallbackEntry.metadata(),
-                fallbackEntry.beforeSnapshot(),
-                fallbackEntry.afterSnapshot(),
-                fallbackEntry.errorMessage(),
-                fallbackEntry.schemaVersion());
+        return fallbackEntry.toAuditEntry();
     }
 
     /**

@@ -1,6 +1,6 @@
 package io.torana.spi;
 
-import io.torana.api.AuditEntry;
+import io.torana.api.model.AuditEntry;
 
 import java.util.List;
 

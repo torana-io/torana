@@ -40,6 +40,12 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <!-- Spring scheduling annotation for recovery service -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+
         <!-- JSON for fallback serialization -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
