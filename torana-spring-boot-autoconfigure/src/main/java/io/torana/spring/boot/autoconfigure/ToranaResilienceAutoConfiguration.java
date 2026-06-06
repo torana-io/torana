@@ -4,7 +4,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import io.torana.resilience.AuditRecoveryService;
 import io.torana.resilience.CircuitBreakerAuditWriter;
+import io.torana.resilience.FileBasedFallbackWriter;
 import io.torana.resilience.LoggingFallbackWriter;
 import io.torana.resilience.RetryableAuditWriter;
 import io.torana.spi.AuditWriter;
@@ -20,6 +22,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.time.Duration;
 
@@ -97,7 +100,55 @@ public class ToranaResilienceAutoConfiguration {
             return new LoggingFallbackWriter();
         }
 
-        // Note: FileBasedFallbackWriter will be added in Sprint 3
+        /**
+         * Creates a file-based fallback writer.
+         *
+         * <p>Activated when {@code torana.resilience.fallback.type=file_based}.
+         *
+         * @param properties Torana configuration properties
+         * @return file-based fallback writer
+         */
+        @Bean
+        @ConditionalOnMissingBean(FallbackAuditWriter.class)
+        @ConditionalOnProperty(
+                prefix = "torana.resilience.fallback",
+                name = "type",
+                havingValue = "file_based")
+        public FileBasedFallbackWriter toranaFileBasedFallbackWriter(ToranaProperties properties) {
+            String directory = properties.getResilience().getFallback().getFileBasedDirectory();
+            return new FileBasedFallbackWriter(directory);
+        }
+    }
+
+    /**
+     * Configuration for audit recovery service.
+     *
+     * <p>Activated when file-based fallback is enabled and recovery is not explicitly disabled.
+     */
+    @Configuration(proxyBeanMethods = false)
+    @EnableScheduling
+    @ConditionalOnProperty(
+            prefix = "torana.resilience.fallback",
+            name = "type",
+            havingValue = "file_based")
+    static class RecoveryConfiguration {
+
+        /**
+         * Creates the audit recovery service.
+         *
+         * <p>This service automatically recovers fallback entries when the database is available.
+         *
+         * @param fallbackWriter the file-based fallback writer
+         * @param primaryWriter the primary audit writer
+         * @return audit recovery service
+         */
+        @Bean
+        @ConditionalOnBean({FileBasedFallbackWriter.class, AuditWriter.class})
+        public AuditRecoveryService toranaAuditRecoveryService(
+                FileBasedFallbackWriter fallbackWriter,
+                @Qualifier("delegateAuditWriter") AuditWriter primaryWriter) {
+            return new AuditRecoveryService(fallbackWriter, primaryWriter);
+        }
     }
 
     /**
