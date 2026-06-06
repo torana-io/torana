@@ -91,6 +91,8 @@ Just annotate your business methods.
 
 ## Example usage
 
+### Basic Usage
+
 ```java
 @AuditedAction(
     value = "order.cancelled",
@@ -104,6 +106,89 @@ public void cancelOrder(CancelOrderCommand command) {
 }
 ```
 
+### Adding Metadata
+
+Use `metadataFields` for type-safe metadata with complex expressions:
+
+```java
+@AuditedAction(
+    value = "order.cancelled",
+    targetType = "Order",
+    targetId = "#command.orderId",
+    metadataFields = {
+        "reason:#command.reason",
+        "priority:#command.priority",
+        "cancelledBy:#securityContext.username"
+    }
+)
+@Transactional
+public void cancelOrder(CancelOrderCommand command) {
+    Order order = orderRepository.getById(command.orderId());
+    order.cancel(command.reason());
+}
+```
+
+Or use `@AuditMetadata` for structured metadata:
+
+```java
+@AuditedAction(
+    value = "order.placed",
+    targetType = "Order",
+    targetId = "#order.id"
+)
+@AuditMetadata({
+    @MetadataField(key = "customerId", value = "#order.customerId"),
+    @MetadataField(key = "items", value = "#order.items.size()"),
+    @MetadataField(key = "total", value = "#order.total")
+})
+@Transactional
+public void placeOrder(PlaceOrderCommand command) {
+    Order order = orderService.createOrder(command);
+    orderRepository.save(order);
+}
+```
+
+### Preset Annotations
+
+For common operations, use preset annotations to reduce boilerplate:
+
+```java
+@AuditedCreate(
+    targetType = "Order",
+    targetId = "#order.id",
+    captureChanges = true,
+    snapshotSource = "#order"
+)
+@Transactional
+public void createOrder(CreateOrderCommand command) {
+    Order order = orderService.createOrder(command);
+    orderRepository.save(order);
+}
+
+@AuditedUpdate(
+    targetType = "Order",
+    targetId = "#order.id",
+    captureChanges = true,
+    snapshotSource = "#order"
+)
+@Transactional
+public void updateOrder(Order order, UpdateOrderCommand command) {
+    orderService.applyChanges(order, command);
+    orderRepository.save(order);
+}
+
+@AuditedDelete(
+    targetType = "Order",
+    targetId = "#orderId"
+)
+@Transactional
+public void deleteOrder(String orderId) {
+    orderRepository.deleteById(orderId);
+}
+```
+
+### Query Audit Entries
+
 The goal is that a team can later query something like:
 
 - action = `order.cancelled`
@@ -112,6 +197,8 @@ The goal is that a team can later query something like:
 - tenant = `acme`
 - requestId = `req-456`
 - traceId = `trace-789`
+- metadata.reason = `Customer requested cancellation`
+- metadata.priority = `high`
 
 ## Transaction Behavior
 
