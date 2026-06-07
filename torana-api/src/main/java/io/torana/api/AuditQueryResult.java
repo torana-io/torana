@@ -39,6 +39,14 @@ public record AuditQueryResult(
         boolean hasNext) {
 
     /**
+     * Canonical constructor that creates a defensive copy of the entries list to prevent external
+     * modification.
+     */
+    public AuditQueryResult {
+        entries = List.copyOf(entries);
+    }
+
+    /**
      * Creates a query result from raw data.
      *
      * @param entries the entries for this page
