@@ -3,6 +3,7 @@ package io.torana.resilience;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import io.torana.api.model.Actor;
 import io.torana.api.model.AuditAction;
 import io.torana.api.model.AuditEntry;
@@ -106,7 +107,6 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
                         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                         .enable(SerializationFeature.INDENT_OUTPUT);
 
-        // Ensure directory exists
         ensureDirectoryExists();
     }
 
@@ -125,15 +125,12 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
     @Override
     public void writeFallback(AuditEntry entry) {
         try {
-            // Generate filename: audit-{timestamp}-{uuid}.json
             String timestamp = TIMESTAMP_FORMAT.format(entry.occurredAt());
             String filename = String.format("audit-%s-%s.json", timestamp, entry.id());
             Path filePath = fallbackDirectory.resolve(filename);
 
-            // Serialize entry to JSON
             String json = objectMapper.writeValueAsString(new FallbackEntry(entry));
 
-            // Write to file (atomic write)
             Files.writeString(
                     filePath, json, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 
@@ -144,7 +141,6 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
                     entry.id());
 
         } catch (IOException e) {
-            // Never throw from fallback - log error and continue
             log.error(
                     "Failed to write fallback file for audit entry (id={}, action={}): {}",
                     entry.id(),
@@ -152,7 +148,6 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
                     e.getMessage(),
                     e);
         } catch (Exception e) {
-            // Catch all exceptions to ensure fallback never fails the business operation
             log.error(
                     "Unexpected error writing fallback for audit entry (id={}, action={}): {}",
                     entry.id(),
@@ -252,9 +247,7 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
         }
     }
 
-    /**
-     * Ensures the fallback directory exists, creating it if necessary.
-     */
+    /** Ensures the fallback directory exists, creating it if necessary. */
     private void ensureDirectoryExists() {
         try {
             if (!Files.exists(fallbackDirectory)) {
@@ -337,44 +330,6 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
                     Instant.now());
         }
 
-        public AuditEntry toAuditEntry() {
-            return AuditEntry.builder()
-                    .id(java.util.UUID.fromString(id))
-                    .action(AuditAction.of(action))
-                    .occurredAt(occurredAt)
-                    .outcome(AuditOutcome.valueOf(outcome))
-                    .actor(actor())
-                    .tenant(tenant())
-                    .target(target())
-                    .requestContext(requestContext())
-                    .traceContext(traceContext())
-                    .metadata(metadata)
-                    .changes(changes)
-                    .errorMessage(errorMessage)
-                    .schemaVersion(schemaVersion == null ? AuditEntry.CURRENT_SCHEMA_VERSION : schemaVersion)
-                    .build();
-        }
-
-        private Actor actor() {
-            return actorId == null ? null : new Actor(actorId, io.torana.api.model.ActorType.valueOf(actorType), actorName, Map.of());
-        }
-
-        private Tenant tenant() {
-            return tenantId == null ? null : Tenant.of(tenantId, tenantName);
-        }
-
-        private Target target() {
-            return targetType == null || targetId == null ? null : Target.of(targetType, targetId, targetDisplayName);
-        }
-
-        private RequestContext requestContext() {
-            return new RequestContext(requestId, requestMethod, requestPath, clientIp, userAgent, Map.of());
-        }
-
-        private TraceContext traceContext() {
-            return TraceContext.of(traceId, spanId, parentSpanId);
-        }
-
         private static String actorId(Actor actor) {
             return actor == null ? null : actor.id();
         }
@@ -437,6 +392,56 @@ public class FileBasedFallbackWriter implements FallbackAuditWriter {
 
         private static String parentSpanId(TraceContext traceContext) {
             return traceContext == null ? null : traceContext.parentSpanId();
+        }
+
+        public AuditEntry toAuditEntry() {
+            return AuditEntry.builder()
+                    .id(java.util.UUID.fromString(id))
+                    .action(AuditAction.of(action))
+                    .occurredAt(occurredAt)
+                    .outcome(AuditOutcome.valueOf(outcome))
+                    .actor(actor())
+                    .tenant(tenant())
+                    .target(target())
+                    .requestContext(requestContext())
+                    .traceContext(traceContext())
+                    .metadata(metadata)
+                    .changes(changes)
+                    .errorMessage(errorMessage)
+                    .schemaVersion(
+                            schemaVersion == null
+                                    ? AuditEntry.CURRENT_SCHEMA_VERSION
+                                    : schemaVersion)
+                    .build();
+        }
+
+        private Actor actor() {
+            return actorId == null
+                    ? null
+                    : new Actor(
+                            actorId,
+                            io.torana.api.model.ActorType.valueOf(actorType),
+                            actorName,
+                            Map.of());
+        }
+
+        private Tenant tenant() {
+            return tenantId == null ? null : Tenant.of(tenantId, tenantName);
+        }
+
+        private Target target() {
+            return targetType == null || targetId == null
+                    ? null
+                    : Target.of(targetType, targetId, targetDisplayName);
+        }
+
+        private RequestContext requestContext() {
+            return new RequestContext(
+                    requestId, requestMethod, requestPath, clientIp, userAgent, Map.of());
+        }
+
+        private TraceContext traceContext() {
+            return TraceContext.of(traceId, spanId, parentSpanId);
         }
     }
 }

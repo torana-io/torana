@@ -58,7 +58,8 @@ public class ToranaMicrometerAutoConfiguration {
         @Bean
         @ConditionalOnMissingBean(TraceResolver.class)
         @ConditionalOnBean(name = "observationRegistry")
-        public TraceResolver toranaMicrometerTraceResolver(io.micrometer.observation.ObservationRegistry observationRegistry) {
+        public TraceResolver toranaMicrometerTraceResolver(
+                io.micrometer.observation.ObservationRegistry observationRegistry) {
             return new MicrometerTraceResolver(observationRegistry);
         }
     }
@@ -93,12 +94,12 @@ public class ToranaMicrometerAutoConfiguration {
         /**
          * Creates a metrics-instrumented audit writer.
          *
-         * <p>This bean decorates the delegate audit writer (typically {@code JdbcAuditWriter})
-         * with metrics collection. It becomes the primary {@code AuditWriter} bean when metrics
-         * are enabled.
+         * <p>This bean decorates the delegate audit writer (typically {@code JdbcAuditWriter}) with
+         * metrics collection. It becomes the primary {@code AuditWriter} bean when metrics are
+         * enabled.
          *
-         * <p>The delegate is identified by the {@code @Qualifier("delegateAuditWriter")}
-         * annotation to avoid circular dependencies.
+         * <p>The delegate is identified by the {@code @Qualifier("delegateAuditWriter")} annotation
+         * to avoid circular dependencies.
          *
          * <p>Being marked as {@code @Primary}, this bean will be injected into {@code
          * TransactionAwareWriter} instead of the delegate, ensuring all audit writes are

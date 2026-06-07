@@ -69,8 +69,7 @@ public class AuditRecoveryService {
      * @param fallbackWriter the file-based fallback writer
      * @param primaryWriter the primary audit writer (database)
      */
-    public AuditRecoveryService(
-            FileBasedFallbackWriter fallbackWriter, AuditWriter primaryWriter) {
+    public AuditRecoveryService(FileBasedFallbackWriter fallbackWriter, AuditWriter primaryWriter) {
         this(fallbackWriter, primaryWriter, DEFAULT_BATCH_SIZE);
     }
 
@@ -97,8 +96,7 @@ public class AuditRecoveryService {
      * Configure via Spring scheduling properties.
      */
     @Scheduled(
-            initialDelayString =
-                    "${torana.resilience.recovery.initial-delay-seconds:60000}",
+            initialDelayString = "${torana.resilience.recovery.initial-delay-seconds:60000}",
             fixedDelayString = "${torana.resilience.recovery.fixed-delay-seconds:300000}",
             timeUnit = TimeUnit.MILLISECONDS)
     public void recoverPendingEntries() {
@@ -115,7 +113,6 @@ public class AuditRecoveryService {
             int recovered = 0;
             int failed = 0;
 
-            // Process in batches
             for (int i = 0; i < fallbackFiles.size(); i += batchSize) {
                 int end = Math.min(i + batchSize, fallbackFiles.size());
                 List<Path> batch = fallbackFiles.subList(i, end);
@@ -155,7 +152,6 @@ public class AuditRecoveryService {
         List<AuditEntry> entries = new ArrayList<>();
         List<Path> successfulFiles = new ArrayList<>();
 
-        // Read all entries in the batch
         for (Path filePath : filePaths) {
             try {
                 FileBasedFallbackWriter.FallbackEntry fallbackEntry =
@@ -180,17 +176,14 @@ public class AuditRecoveryService {
             }
         }
 
-        // Attempt to write batch to primary database
         if (!entries.isEmpty()) {
             try {
                 primaryWriter.writeBatch(entries);
 
-                // Success - delete fallback files
                 for (Path filePath : successfulFiles) {
                     if (fallbackWriter.deleteFallbackFile(filePath)) {
                         recovered++;
                     } else {
-                        // Deletion failed, but entry was written - log warning
                         log.warn(
                                 "Entry recovered but failed to delete fallback file: {}",
                                 filePath.getFileName());
@@ -206,7 +199,6 @@ public class AuditRecoveryService {
                         entries.size(),
                         e.getMessage(),
                         e);
-                // Leave files in place for next retry
                 failed += entries.size();
             }
         }

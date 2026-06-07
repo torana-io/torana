@@ -106,9 +106,8 @@ public class AuditedActionAspect {
     @Around("@annotation(auditedCreate)")
     public Object auditCreate(ProceedingJoinPoint joinPoint, AuditedCreate auditedCreate)
             throws Throwable {
-        // Get the base @AuditedAction from the preset's meta-annotation
         AuditedAction baseAction = AuditedCreate.class.getAnnotation(AuditedAction.class);
-        String actionName = baseAction.value(); // "entity.created"
+        String actionName = baseAction.value();
 
         return processAudit(
                 joinPoint,
@@ -119,7 +118,7 @@ public class AuditedActionAspect {
                 auditedCreate.captureChanges(),
                 auditedCreate.snapshotSource(),
                 auditedCreate.metadataFields(),
-                new String[0], // No legacy metadata for presets
+                new String[0],
                 auditedCreate.tags(),
                 auditedCreate.recordFailures());
     }
@@ -138,9 +137,8 @@ public class AuditedActionAspect {
     @Around("@annotation(auditedUpdate)")
     public Object auditUpdate(ProceedingJoinPoint joinPoint, AuditedUpdate auditedUpdate)
             throws Throwable {
-        // Get the base @AuditedAction from the preset's meta-annotation
         AuditedAction baseAction = AuditedUpdate.class.getAnnotation(AuditedAction.class);
-        String actionName = baseAction.value(); // "entity.updated"
+        String actionName = baseAction.value();
 
         return processAudit(
                 joinPoint,
@@ -151,7 +149,7 @@ public class AuditedActionAspect {
                 auditedUpdate.captureChanges(),
                 auditedUpdate.snapshotSource(),
                 auditedUpdate.metadataFields(),
-                new String[0], // No legacy metadata for presets
+                new String[0],
                 auditedUpdate.tags(),
                 auditedUpdate.recordFailures());
     }
@@ -170,9 +168,8 @@ public class AuditedActionAspect {
     @Around("@annotation(auditedDelete)")
     public Object auditDelete(ProceedingJoinPoint joinPoint, AuditedDelete auditedDelete)
             throws Throwable {
-        // Get the base @AuditedAction from the preset's meta-annotation
         AuditedAction baseAction = AuditedDelete.class.getAnnotation(AuditedAction.class);
-        String actionName = baseAction.value(); // "entity.deleted"
+        String actionName = baseAction.value();
 
         return processAudit(
                 joinPoint,
@@ -183,7 +180,7 @@ public class AuditedActionAspect {
                 auditedDelete.captureChanges(),
                 auditedDelete.snapshotSource(),
                 auditedDelete.metadataFields(),
-                new String[0], // No legacy metadata for presets
+                new String[0],
                 auditedDelete.tags(),
                 auditedDelete.recordFailures());
     }
@@ -192,8 +189,7 @@ public class AuditedActionAspect {
      * Core audit processing logic extracted for reuse by preset annotations.
      *
      * <p>This method contains the shared audit processing logic used by both {@link AuditedAction}
-     * and preset annotations ({@link AuditedCreate}, {@link AuditedUpdate}, {@link
-     * AuditedDelete}).
+     * and preset annotations ({@link AuditedCreate}, {@link AuditedUpdate}, {@link AuditedDelete}).
      *
      * @param joinPoint the join point
      * @param actionName the action name
@@ -249,7 +245,6 @@ public class AuditedActionAspect {
             }
         }
 
-        // Process @AuditMetadata annotation (type-safe structured format)
         io.torana.api.AuditMetadata auditMetadata =
                 method.getAnnotation(io.torana.api.AuditMetadata.class);
         if (auditMetadata != null) {
@@ -257,7 +252,6 @@ public class AuditedActionAspect {
             context.addAllMetadata(metadata);
         }
 
-        // Process metadataFields array (recommended array format)
         if (metadataFields.length > 0) {
             Map<String, Object> metadata = parseMetadataFields(metadataFields, evaluationContext);
             context.addAllMetadata(metadata);
@@ -276,8 +270,7 @@ public class AuditedActionAspect {
 
         Object snapshotSourceObj = null;
         if (captureChanges && snapshotProvider != null && !snapshotSource.isEmpty()) {
-            snapshotSourceObj =
-                    evaluateExpression(snapshotSource, evaluationContext, Object.class);
+            snapshotSourceObj = evaluateExpression(snapshotSource, evaluationContext, Object.class);
             if (snapshotSourceObj != null) {
                 context.setBeforeSnapshot(snapshotProvider.capture(snapshotSourceObj));
             }
@@ -365,8 +358,7 @@ public class AuditedActionAspect {
      * @param context SpEL evaluation context
      * @return map of evaluated metadata (null values are excluded)
      */
-    private Map<String, Object> parseMetadataFields(
-            String[] fields, EvaluationContext context) {
+    private Map<String, Object> parseMetadataFields(String[] fields, EvaluationContext context) {
         Map<String, Object> metadata = new HashMap<>();
         for (String field : fields) {
             int colonIndex = field.indexOf(':');

@@ -84,7 +84,6 @@ public class MetricsAuditWriter implements AuditWriter {
         this.meterRegistry = meterRegistry;
         this.includeDetailedTags = includeDetailedTags;
 
-        // Initialize meters
         this.writeTimer =
                 Timer.builder(METRIC_WRITE_LATENCY)
                         .description("Time taken to write a single audit entry")
@@ -157,7 +156,6 @@ public class MetricsAuditWriter implements AuditWriter {
                         delegate.writeBatch(entries);
                         batchWriteSuccessCounter.increment();
 
-                        // Also increment individual success counter by batch size
                         writeSuccessCounter.increment(entries.size());
 
                         if (includeDetailedTags) {
@@ -166,11 +164,9 @@ public class MetricsAuditWriter implements AuditWriter {
                     } catch (Exception e) {
                         batchWriteErrorCounter.increment();
 
-                        // Also increment individual error counter by batch size
                         writeErrorCounter.increment(entries.size());
 
                         if (includeDetailedTags && !entries.isEmpty()) {
-                            // Record metrics for first entry in batch
                             recordDetailedMetrics(entries.get(0), false);
                         }
 
@@ -186,8 +182,8 @@ public class MetricsAuditWriter implements AuditWriter {
     /**
      * Records detailed metrics with additional tags (action, outcome).
      *
-     * <p>This method is called only when {@code includeDetailedTags} is true. It creates
-     * additional counters with action and outcome tags for more granular tracking.
+     * <p>This method is called only when {@code includeDetailedTags} is true. It creates additional
+     * counters with action and outcome tags for more granular tracking.
      *
      * @param entry the audit entry
      * @param success whether the write was successful

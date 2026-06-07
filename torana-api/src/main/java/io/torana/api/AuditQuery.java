@@ -126,8 +126,8 @@ public interface AuditQuery {
      * }</pre>
      *
      * <p><strong>Performance Note:</strong> Metadata filtering requires JSON query support and may
-     * be slower than indexed field queries. Consider creating database indexes on frequently queried
-     * metadata fields.
+     * be slower than indexed field queries. Consider creating database indexes on frequently
+     * queried metadata fields.
      *
      * @param key the metadata key
      * @param value the metadata value

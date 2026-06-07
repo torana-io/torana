@@ -28,8 +28,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * </ul>
  *
  * <p>The {@code AFTER_COMMIT} policy ensures that audit entries are only written when the business
- * transaction commits successfully, preventing orphaned audit records for rolled-back
- * transactions.
+ * transaction commits successfully, preventing orphaned audit records for rolled-back transactions.
  *
  * <p>The {@code REQUIRES_NEW} policy writes audit entries in a separate transaction, ensuring they
  * persist even if the parent transaction rolls back. This requires a {@code
@@ -103,8 +102,7 @@ public class SpringTransactionAwareWriter implements TransactionAwareWriter {
      */
     private void writeAfterCommit(AuditEntry entry) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(
-                    new AfterCommitWriter(entry));
+            TransactionSynchronizationManager.registerSynchronization(new AfterCommitWriter(entry));
         } else {
             delegate.write(entry);
         }

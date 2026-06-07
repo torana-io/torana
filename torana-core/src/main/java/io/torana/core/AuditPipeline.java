@@ -102,7 +102,6 @@ public class AuditPipeline {
     public void process(AuditContext context) {
         AuditEntry entry = null;
 
-        // Phase 1: Collection
         try {
             contextCollector.collect(context);
             context.markCompleted();
@@ -111,7 +110,6 @@ public class AuditPipeline {
             return;
         }
 
-        // Phase 2: Creation
         try {
             entry = entryFactory.create(context);
         } catch (Exception e) {
@@ -119,7 +117,6 @@ public class AuditPipeline {
             return;
         }
 
-        // Phase 3: Redaction
         try {
             entry = redactionPolicy != null ? redactionPolicy.apply(entry) : entry;
         } catch (Exception e) {
@@ -127,7 +124,6 @@ public class AuditPipeline {
             return;
         }
 
-        // Phase 4: Persistence
         try {
             transactionAwareWriter.write(entry, context.getOutcome());
         } catch (Exception e) {

@@ -17,10 +17,11 @@ public class ToranaProperties {
 
     /**
      * Schema initialization mode.
+     *
      * <ul>
-     *   <li>{@code none} - No schema initialization (default, use Flyway/Liquibase)</li>
-     *   <li>{@code create} - Create schema if it doesn't exist (development)</li>
-     *   <li>{@code create-drop} - Create schema on startup, drop on shutdown (testing)</li>
+     *   <li>{@code none} - No schema initialization (default, use Flyway/Liquibase)
+     *   <li>{@code create} - Create schema if it doesn't exist (development)
+     *   <li>{@code create-drop} - Create schema on startup, drop on shutdown (testing)
      * </ul>
      */
     private SchemaMode schemaMode = SchemaMode.NONE;
@@ -39,16 +40,6 @@ public class ToranaProperties {
 
     /** Resilience configuration for error recovery patterns. */
     private ResilienceProperties resilience = new ResilienceProperties();
-
-    /** Schema initialization modes. */
-    public enum SchemaMode {
-        /** No automatic schema creation. */
-        NONE,
-        /** Create schema if it doesn't exist. */
-        CREATE,
-        /** Create schema on startup, drop on shutdown. */
-        CREATE_DROP
-    }
 
     public boolean isEnabled() {
         return enabled;
@@ -112,6 +103,16 @@ public class ToranaProperties {
 
     public void setResilience(ResilienceProperties resilience) {
         this.resilience = resilience;
+    }
+
+    /** Schema initialization modes. */
+    public enum SchemaMode {
+        /** No automatic schema creation. */
+        NONE,
+        /** Create schema if it doesn't exist. */
+        CREATE,
+        /** Create schema on startup, drop on shutdown. */
+        CREATE_DROP
     }
 
     /** Redaction configuration. */
@@ -254,8 +255,8 @@ public class ToranaProperties {
          * <p>Enabling this provides more granular metrics but may increase cardinality
          * significantly, especially if you have many unique action names.
          *
-         * <p>Consider enabling only in development or staging environments, or when you have
-         * a small, controlled set of action names.
+         * <p>Consider enabling only in development or staging environments, or when you have a
+         * small, controlled set of action names.
          */
         private boolean includeDetailedTags = false;
 
@@ -269,8 +270,8 @@ public class ToranaProperties {
         /**
          * Error rate threshold (0.0 to 1.0) that triggers a health check warning.
          *
-         * <p>When the error rate exceeds this threshold within the health check window,
-         * the health indicator will report a WARNING status.
+         * <p>When the error rate exceeds this threshold within the health check window, the health
+         * indicator will report a WARNING status.
          *
          * <p>Default: 0.1 (10% error rate)
          */
@@ -354,15 +355,16 @@ public class ToranaProperties {
             /**
              * Failure rate threshold (percentage) that triggers circuit breaker to open.
              *
-             * <p>When the failure rate exceeds this threshold, the circuit opens and subsequent calls
-             * are redirected to the fallback writer without attempting the primary writer.
+             * <p>When the failure rate exceeds this threshold, the circuit opens and subsequent
+             * calls are redirected to the fallback writer without attempting the primary writer.
              *
              * <p>Default: 50 (50% failure rate)
              */
             private int failureRateThreshold = 50;
 
             /**
-             * Minimum number of calls required before the circuit breaker can calculate the failure rate.
+             * Minimum number of calls required before the circuit breaker can calculate the failure
+             * rate.
              *
              * <p>The circuit breaker won't open until at least this many calls have been recorded.
              *
@@ -383,8 +385,8 @@ public class ToranaProperties {
             /**
              * Number of permitted calls when the circuit is HALF_OPEN.
              *
-             * <p>These calls test whether the primary writer has recovered. If they succeed,
-             * the circuit closes. If they fail, the circuit reopens.
+             * <p>These calls test whether the primary writer has recovered. If they succeed, the
+             * circuit closes. If they fail, the circuit reopens.
              *
              * <p>Default: 5
              */
@@ -437,8 +439,7 @@ public class ToranaProperties {
 
             public void setPermittedNumberOfCallsInHalfOpenState(
                     int permittedNumberOfCallsInHalfOpenState) {
-                this.permittedNumberOfCallsInHalfOpenState =
-                        permittedNumberOfCallsInHalfOpenState;
+                this.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
             }
 
             public int getSlidingWindowSize() {
@@ -468,8 +469,8 @@ public class ToranaProperties {
             /**
              * Wait duration in milliseconds before the first retry.
              *
-             * <p>Subsequent retries use exponential backoff based on this duration
-             * and the exponentialBackoffMultiplier.
+             * <p>Subsequent retries use exponential backoff based on this duration and the
+             * exponentialBackoffMultiplier.
              *
              * <p>Default: 1000ms (1 second)
              */
@@ -479,6 +480,7 @@ public class ToranaProperties {
              * Multiplier for exponential backoff.
              *
              * <p>Each retry waits exponentially longer:
+             *
              * <ul>
              *   <li>Retry 1: waitDurationMillis
              *   <li>Retry 2: waitDurationMillis * multiplier

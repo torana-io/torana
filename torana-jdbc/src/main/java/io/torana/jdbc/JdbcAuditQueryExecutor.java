@@ -47,7 +47,8 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
     private final SqlDialect dialect;
     private final String tableName;
     private final ObjectMapper objectMapper;
-
+    private final List<MetadataFilter> metadataFilters = new ArrayList<>();
+    private final List<String> metadataKeyExists = new ArrayList<>();
     private String action;
     private String actionPrefix;
     private String actorId;
@@ -61,8 +62,6 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
     private String traceId;
     private int limit = DEFAULT_LIMIT;
     private int offset = 0;
-    private final List<MetadataFilter> metadataFilters = new ArrayList<>();
-    private final List<String> metadataKeyExists = new ArrayList<>();
     private String orderByField = "occurred_at";
     private AuditQuery.OrderDirection orderDirection = AuditQuery.OrderDirection.DESC;
 
@@ -205,7 +204,6 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
 
         appendWhereClause(sql, params);
 
-        // Add ORDER BY clause
         sql.append(" ORDER BY ").append(orderByField);
         sql.append(orderDirection == AuditQuery.OrderDirection.DESC ? " DESC" : " ASC");
 
@@ -218,13 +216,10 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
 
     @Override
     public io.torana.api.AuditQueryResult executeWithPagination() {
-        // Execute query to get entries
         List<AuditEntryView> entries = execute();
 
-        // Get total count
         long totalCount = count();
 
-        // Build result
         return io.torana.api.AuditQueryResult.of(entries, totalCount, offset, limit);
     }
 
@@ -285,7 +280,6 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
             params.add(traceId);
         }
 
-        // Metadata filters
         for (MetadataFilter filter : metadataFilters) {
             String condition =
                     JsonQueryHelper.buildMetadataFilterCondition(
@@ -296,7 +290,6 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
             }
         }
 
-        // Metadata key existence checks
         for (String key : metadataKeyExists) {
             String condition =
                     JsonQueryHelper.buildMetadataKeyExistsCondition(dialect, "metadata", key);
@@ -331,6 +324,9 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
             String errorMessage,
             int schemaVersion)
             implements AuditEntryView {}
+
+    /** Helper record for metadata filtering. */
+    private record MetadataFilter(String key, Object value) {}
 
     /** Row mapper for audit entries. */
     private class AuditEntryRowMapper implements RowMapper<AuditEntryView> {
@@ -425,7 +421,4 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
             }
         }
     }
-
-    /** Helper record for metadata filtering. */
-    private record MetadataFilter(String key, Object value) {}
 }

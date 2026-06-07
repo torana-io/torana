@@ -1,8 +1,8 @@
 package io.torana.spring.boot.autoconfigure;
 
-import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.torana.resilience.AuditRecoveryService;

@@ -45,8 +45,9 @@ public interface TransactionAwareWriter {
          * <p>This ensures the audit entry persists even if the parent transaction rolls back. The
          * audit write runs in a completely separate transaction.
          *
-         * <p><strong>Note:</strong> This policy requires a {@code PlatformTransactionManager} (Spring
-         * only). Non-Spring implementations will throw {@code UnsupportedOperationException}.
+         * <p><strong>Note:</strong> This policy requires a {@code PlatformTransactionManager}
+         * (Spring only). Non-Spring implementations will throw {@code
+         * UnsupportedOperationException}.
          */
         REQUIRES_NEW,
 

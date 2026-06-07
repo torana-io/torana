@@ -66,8 +66,8 @@ public @interface AuditedCreate {
      * <p>The expression is evaluated against method parameters. Example: "#order.id" or
      * "#result.id"
      *
-     * <p>For create operations, you typically reference the created entity after it's been
-     * assigned an ID.
+     * <p>For create operations, you typically reference the created entity after it's been assigned
+     * an ID.
      *
      * @return the SpEL expression for target ID
      */

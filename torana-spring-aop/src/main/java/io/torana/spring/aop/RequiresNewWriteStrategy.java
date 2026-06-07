@@ -11,8 +11,8 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 /**
  * Writes audit entries in a new transaction using REQUIRES_NEW propagation.
  *
- * <p>This ensures that audit entries persist even if the business transaction rolls back. The
- * audit write runs in a completely separate transaction, which is:
+ * <p>This ensures that audit entries persist even if the business transaction rolls back. The audit
+ * write runs in a completely separate transaction, which is:
  *
  * <ul>
  *   <li>Independent of the parent transaction state

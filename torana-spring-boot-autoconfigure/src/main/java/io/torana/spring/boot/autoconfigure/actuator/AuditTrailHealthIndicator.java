@@ -63,10 +63,10 @@ public class AuditTrailHealthIndicator implements HealthIndicator {
     private final int healthCheckWindowSeconds;
     private final double errorRateThreshold;
 
-    // Simple error tracking (could be enhanced with sliding window)
     private final AtomicLong totalWrites = new AtomicLong(0);
     private final AtomicLong totalErrors = new AtomicLong(0);
-    private final AtomicReference<Long> lastResetTime = new AtomicReference<>(System.currentTimeMillis());
+    private final AtomicReference<Long> lastResetTime =
+            new AtomicReference<>(System.currentTimeMillis());
 
     public AuditTrailHealthIndicator(
             JdbcTemplate jdbcTemplate,
@@ -84,13 +84,10 @@ public class AuditTrailHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         try {
-            // Reset counters if window has elapsed
             resetCountersIfNeeded();
 
-            // Check database connectivity and table accessibility
             checkDatabaseHealth();
 
-            // Calculate error rate
             long writes = totalWrites.get();
             long errors = totalErrors.get();
             double errorRate = writes > 0 ? (double) errors / writes : 0.0;
@@ -104,9 +101,7 @@ public class AuditTrailHealthIndicator implements HealthIndicator {
             details.put("errorRateThreshold", String.format("%.2f%%", errorRateThreshold * 100));
             details.put("windowSeconds", healthCheckWindowSeconds);
 
-            // Determine health status
             if (errorRate > errorRateThreshold && writes > 10) {
-                // Only warn if we have enough samples (>10 writes)
                 return Health.status("WARNING")
                         .withDetails(details)
                         .withDetail("message", "Error rate exceeds threshold")
@@ -119,7 +114,8 @@ public class AuditTrailHealthIndicator implements HealthIndicator {
             log.error("Audit trail health check failed: {}", e.getMessage(), e);
             return Health.down()
                     .withException(e)
-                    .withDetail("database", dialect.getClass().getSimpleName().replace("Dialect", ""))
+                    .withDetail(
+                            "database", dialect.getClass().getSimpleName().replace("Dialect", ""))
                     .withDetail("tableName", tableName)
                     .withDetail("error", e.getMessage())
                     .build();
@@ -134,8 +130,6 @@ public class AuditTrailHealthIndicator implements HealthIndicator {
      * @throws Exception if database check fails
      */
     private void checkDatabaseHealth() {
-        // Simple connectivity check: count rows in audit table
-        // Using LIMIT 1 for performance (we don't care about the actual count)
         String sql = String.format("SELECT COUNT(*) FROM %s", tableName);
 
         try {
@@ -157,7 +151,6 @@ public class AuditTrailHealthIndicator implements HealthIndicator {
         long windowMillis = healthCheckWindowSeconds * 1000L;
 
         if (now - lastReset > windowMillis) {
-            // Try to reset (atomic compare-and-set)
             if (lastResetTime.compareAndSet(lastReset, now)) {
                 totalWrites.set(0);
                 totalErrors.set(0);

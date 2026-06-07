@@ -24,7 +24,6 @@ import io.torana.spring.aop.SpringTransactionAwareWriter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -32,12 +31,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
@@ -92,11 +91,11 @@ public class ToranaAutoConfiguration {
     /**
      * Creates the delegate audit writer (JDBC-based).
      *
-     * <p>This bean is qualified as "delegateAuditWriter" to allow other components
-     * (like MetricsAuditWriter) to decorate it without causing circular dependencies.
+     * <p>This bean is qualified as "delegateAuditWriter" to allow other components (like
+     * MetricsAuditWriter) to decorate it without causing circular dependencies.
      *
-     * <p>The actual primary AuditWriter bean may be a decorated version if metrics
-     * are enabled (see ToranaMicrometerAutoConfiguration).
+     * <p>The actual primary AuditWriter bean may be a decorated version if metrics are enabled (see
+     * ToranaMicrometerAutoConfiguration).
      */
     @Bean
     @Qualifier("delegateAuditWriter")
@@ -191,9 +190,13 @@ public class ToranaAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public AuditedActionAspect toranaAuditedActionAspect(
-            AuditPipeline auditPipeline, SnapshotProvider snapshotProvider, ToranaProperties properties) {
-        log.info("Torana audit trail initialized - table: '{}', schema-mode: {}",
-                properties.getTableName(), properties.getSchemaMode().name().toLowerCase().replace('_', '-'));
+            AuditPipeline auditPipeline,
+            SnapshotProvider snapshotProvider,
+            ToranaProperties properties) {
+        log.info(
+                "Torana audit trail initialized - table: '{}', schema-mode: {}",
+                properties.getTableName(),
+                properties.getSchemaMode().name().toLowerCase().replace('_', '-'));
         return new AuditedActionAspect(auditPipeline, snapshotProvider);
     }
 }

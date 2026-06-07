@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import io.torana.api.model.AuditEntry;
 import io.torana.api.model.RequestContext;
 import io.torana.api.model.TraceContext;
@@ -72,9 +73,7 @@ public class LoggingFallbackWriter implements FallbackAuditWriter {
 
     private final ObjectMapper objectMapper;
 
-    /**
-     * Creates a logging fallback writer with default JSON serialization.
-     */
+    /** Creates a logging fallback writer with default JSON serialization. */
     public LoggingFallbackWriter() {
         this.objectMapper =
                 new ObjectMapper()
@@ -97,7 +96,6 @@ public class LoggingFallbackWriter implements FallbackAuditWriter {
             String json = serializeToJson(entry);
             log.info("{} {}", LOG_PREFIX, json);
         } catch (Exception e) {
-            // Never throw from fallback - log error and best-effort fallback
             log.error(
                     "{} Failed to serialize audit entry (id={}, action={}): {}",
                     LOG_PREFIX,
@@ -105,7 +103,6 @@ public class LoggingFallbackWriter implements FallbackAuditWriter {
                     entry.action(),
                     e.getMessage());
 
-            // Last-resort fallback: log basic details without serialization
             log.info(
                     "{} action={}, actor={}, target={}:{}, outcome={}, occurred_at={}",
                     LOG_PREFIX,

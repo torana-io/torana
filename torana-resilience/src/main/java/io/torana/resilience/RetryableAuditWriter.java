@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
+ *
  * Decorator that adds retry logic with exponential backoff to audit writes.
  *
  * <p>This implementation uses Resilience4j's Retry pattern to automatically retry failed write
@@ -51,12 +52,9 @@ import java.util.function.Supplier;
  * Attempt 3: After 2000ms
  * </pre>
  */
-public class RetryableAuditWriter implements AuditWriter {
+public record RetryableAuditWriter(AuditWriter delegate, Retry retry) implements AuditWriter {
 
     private static final Logger log = LoggerFactory.getLogger(RetryableAuditWriter.class);
-
-    private final AuditWriter delegate;
-    private final Retry retry;
 
     /**
      * Creates a retryable audit writer.
@@ -68,7 +66,6 @@ public class RetryableAuditWriter implements AuditWriter {
         this.delegate = delegate;
         this.retry = retry;
 
-        // Register event listeners for logging
         retry.getEventPublisher()
                 .onRetry(
                         event ->
@@ -114,8 +111,7 @@ public class RetryableAuditWriter implements AuditWriter {
                         .maxAttempts(3)
                         .waitDuration(Duration.ofMillis(1000))
                         .intervalFunction(
-                                IntervalFunction.ofExponentialBackoff(
-                                        Duration.ofMillis(1000), 2.0))
+                                IntervalFunction.ofExponentialBackoff(Duration.ofMillis(1000), 2.0))
                         .build();
 
         Retry retry = Retry.of("auditWriter", config);
@@ -124,18 +120,20 @@ public class RetryableAuditWriter implements AuditWriter {
 
     @Override
     public void write(AuditEntry entry) {
-        executeWithRetry(() -> {
-            delegate.write(entry);
-            return null;
-        });
+        executeWithRetry(
+                () -> {
+                    delegate.write(entry);
+                    return null;
+                });
     }
 
     @Override
     public void writeBatch(List<AuditEntry> entries) {
-        executeWithRetry(() -> {
-            delegate.writeBatch(entries);
-            return null;
-        });
+        executeWithRetry(
+                () -> {
+                    delegate.writeBatch(entries);
+                    return null;
+                });
     }
 
     /**
@@ -155,7 +153,7 @@ public class RetryableAuditWriter implements AuditWriter {
      *
      * @return the delegate audit writer
      */
-    public AuditWriter getDelegate() {
+    @Override public AuditWriter delegate() {
         return delegate;
     }
 
@@ -164,7 +162,7 @@ public class RetryableAuditWriter implements AuditWriter {
      *
      * @return the retry instance
      */
-    public Retry getRetry() {
+    @Override public Retry retry() {
         return retry;
     }
 }

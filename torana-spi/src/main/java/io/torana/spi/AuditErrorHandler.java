@@ -39,11 +39,12 @@ public interface AuditErrorHandler {
      * Handles an error that occurred during audit processing.
      *
      * <p>The handler can:
+     *
      * <ul>
-     *   <li>Log the error to external systems</li>
-     *   <li>Send alerts or notifications</li>
-     *   <li>Decide whether to fail the transaction (by throwing an exception)</li>
-     *   <li>Implement custom retry logic</li>
+     *   <li>Log the error to external systems
+     *   <li>Send alerts or notifications
+     *   <li>Decide whether to fail the transaction (by throwing an exception)
+     *   <li>Implement custom retry logic
      * </ul>
      *
      * <p><strong>Important:</strong> If this method throws an exception, the business transaction
@@ -55,17 +56,17 @@ public interface AuditErrorHandler {
      * @param phase the phase where the error occurred
      * @throws Exception if the business transaction should fail
      */
-    void handleError(AuditEntry entry, Exception error, ErrorPhase phase)
-            throws Exception;
+    void handleError(AuditEntry entry, Exception error, ErrorPhase phase) throws Exception;
 
     /**
      * Phase of audit processing where an error occurred.
      *
      * <p>This helps error handlers implement phase-specific logic, such as:
+     *
      * <ul>
-     *   <li>Treating persistence errors as critical but collection errors as warnings</li>
-     *   <li>Implementing different retry strategies per phase</li>
-     *   <li>Routing errors to different monitoring channels based on phase</li>
+     *   <li>Treating persistence errors as critical but collection errors as warnings
+     *   <li>Implementing different retry strategies per phase
+     *   <li>Routing errors to different monitoring channels based on phase
      * </ul>
      */
     enum ErrorPhase {
@@ -76,10 +77,11 @@ public interface AuditErrorHandler {
          * contextual information.
          *
          * <p>Common causes:
+         *
          * <ul>
-         *   <li>Spring Security context not available</li>
-         *   <li>Request context unavailable (async/background thread)</li>
-         *   <li>Custom resolver threw exception</li>
+         *   <li>Spring Security context not available
+         *   <li>Request context unavailable (async/background thread)
+         *   <li>Custom resolver threw exception
          * </ul>
          */
         COLLECTION,
@@ -87,14 +89,14 @@ public interface AuditErrorHandler {
         /**
          * Error during audit entry creation.
          *
-         * <p>Occurs when transforming the audit context into an immutable {@code AuditEntry}
-         * fails.
+         * <p>Occurs when transforming the audit context into an immutable {@code AuditEntry} fails.
          *
          * <p>Common causes:
+         *
          * <ul>
-         *   <li>Snapshot provider threw exception</li>
-         *   <li>SpEL expression evaluation failed</li>
-         *   <li>Invalid configuration (e.g., missing required fields)</li>
+         *   <li>Snapshot provider threw exception
+         *   <li>SpEL expression evaluation failed
+         *   <li>Invalid configuration (e.g., missing required fields)
          * </ul>
          */
         CREATION,
@@ -105,10 +107,11 @@ public interface AuditErrorHandler {
          * <p>Occurs when the redaction policy fails to process the audit entry.
          *
          * <p>Common causes:
+         *
          * <ul>
-         *   <li>JSON serialization/deserialization error</li>
-         *   <li>Regex pattern compilation error</li>
-         *   <li>Custom redaction policy bug</li>
+         *   <li>JSON serialization/deserialization error
+         *   <li>Regex pattern compilation error
+         *   <li>Custom redaction policy bug
          * </ul>
          */
         REDACTION,
@@ -119,11 +122,12 @@ public interface AuditErrorHandler {
          * <p>Occurs when writing the audit entry to storage fails.
          *
          * <p>Common causes:
+         *
          * <ul>
-         *   <li>Database connection unavailable</li>
-         *   <li>Table doesn't exist (schema not initialized)</li>
-         *   <li>Transaction timeout or deadlock</li>
-         *   <li>Disk full or write permission denied</li>
+         *   <li>Database connection unavailable
+         *   <li>Table doesn't exist (schema not initialized)
+         *   <li>Transaction timeout or deadlock
+         *   <li>Disk full or write permission denied
          * </ul>
          */
         PERSISTENCE

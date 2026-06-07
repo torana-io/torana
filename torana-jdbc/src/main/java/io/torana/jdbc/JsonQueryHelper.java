@@ -78,8 +78,7 @@ public class JsonQueryHelper {
                             columnName, escapeJsonKey(jsonKey));
             case "H2Dialect" ->
                     // H2: Search for key in JSON string
-                    String.format(
-                            "%s LIKE '%%\"%s\":%%'", columnName, escapeJsonKey(jsonKey));
+                    String.format("%s LIKE '%%\"%s\":%%'", columnName, escapeJsonKey(jsonKey));
             default ->
                     // Fallback: try PostgreSQL syntax
                     String.format("%s ? '%s'", columnName, escapeJsonKey(jsonKey));
@@ -101,12 +100,10 @@ public class JsonQueryHelper {
             SqlDialect dialect, String columnName, String jsonKey, Object value) {
         String extractExpression = buildJsonExtractExpression(dialect, columnName, jsonKey);
 
-        // For null values, check for NULL or missing key
         if (value == null) {
             return String.format("(%s IS NULL OR %s = '')", extractExpression, extractExpression);
         }
 
-        // For numeric values, cast to appropriate type (database-specific)
         if (value instanceof Number) {
             String dialectClass = dialect.getClass().getSimpleName();
             if ("PostgreSqlDialect".equals(dialectClass)) {
@@ -116,7 +113,6 @@ public class JsonQueryHelper {
             }
         }
 
-        // Default: string comparison
         return String.format("%s = ?", extractExpression);
     }
 
@@ -147,7 +143,6 @@ public class JsonQueryHelper {
             throw new IllegalArgumentException("JSON key cannot be null or empty");
         }
 
-        // Validate key: alphanumeric, underscore, dash, period only
         if (!key.matches("^[a-zA-Z0-9_.-]+$")) {
             throw new IllegalArgumentException(
                     "Invalid JSON key: "
@@ -156,7 +151,6 @@ public class JsonQueryHelper {
                             + " allowed");
         }
 
-        // Escape single quotes for SQL
         return key.replace("'", "''");
     }
 
@@ -171,7 +165,6 @@ public class JsonQueryHelper {
             throw new IllegalArgumentException("Order by field cannot be null or empty");
         }
 
-        // Only allow known safe field names
         String[] allowedFields = {
             "occurred_at", "action", "actor_id", "tenant_id", "target_type", "target_id", "outcome"
         };

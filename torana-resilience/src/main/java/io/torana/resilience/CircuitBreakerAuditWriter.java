@@ -1,5 +1,6 @@
 package io.torana.resilience;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.torana.api.model.AuditEntry;
@@ -50,13 +51,9 @@ import java.util.function.Supplier;
  * <p>This writer ensures that audit failures never impact business operations - when the circuit
  * opens, audit entries are buffered to fallback storage for later recovery.
  */
-public class CircuitBreakerAuditWriter implements AuditWriter {
+public record CircuitBreakerAuditWriter(AuditWriter delegate, CircuitBreaker circuitBreaker, FallbackAuditWriter fallback) implements AuditWriter {
 
     private static final Logger log = LoggerFactory.getLogger(CircuitBreakerAuditWriter.class);
-
-    private final AuditWriter delegate;
-    private final CircuitBreaker circuitBreaker;
-    private final FallbackAuditWriter fallback;
 
     /**
      * Creates a circuit breaker audit writer.
@@ -71,7 +68,6 @@ public class CircuitBreakerAuditWriter implements AuditWriter {
         this.circuitBreaker = circuitBreaker;
         this.fallback = fallback;
 
-        // Register event listeners for monitoring
         circuitBreaker
                 .getEventPublisher()
                 .onStateTransition(
@@ -170,14 +166,12 @@ public class CircuitBreakerAuditWriter implements AuditWriter {
     private <T> T executeWithCircuitBreaker(
             Supplier<T> primaryOperation, Supplier<T> fallbackOperation) {
 
-        // Decorate the primary operation with circuit breaker
         Supplier<T> decoratedSupplier =
                 CircuitBreaker.decorateSupplier(circuitBreaker, primaryOperation);
 
         try {
             return decoratedSupplier.get();
-        } catch (io.github.resilience4j.circuitbreaker.CallNotPermittedException e) {
-            // Circuit is OPEN - use fallback
+        } catch (CallNotPermittedException e) {
             log.debug(
                     "Circuit breaker is OPEN, using fallback writer: {}",
                     fallback.getFallbackType());
@@ -228,7 +222,7 @@ public class CircuitBreakerAuditWriter implements AuditWriter {
      *
      * @return the delegate audit writer
      */
-    public AuditWriter getDelegate() {
+    @Override public AuditWriter delegate() {
         return delegate;
     }
 
@@ -237,7 +231,7 @@ public class CircuitBreakerAuditWriter implements AuditWriter {
      *
      * @return the circuit breaker instance
      */
-    public CircuitBreaker getCircuitBreaker() {
+    @Override public CircuitBreaker circuitBreaker() {
         return circuitBreaker;
     }
 
@@ -246,7 +240,7 @@ public class CircuitBreakerAuditWriter implements AuditWriter {
      *
      * @return the fallback audit writer
      */
-    public FallbackAuditWriter getFallback() {
+    @Override public FallbackAuditWriter fallback() {
         return fallback;
     }
 }
