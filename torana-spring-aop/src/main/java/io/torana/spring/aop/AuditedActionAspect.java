@@ -87,7 +87,7 @@ public class AuditedActionAspect {
                 auditedAction.captureChanges(),
                 auditedAction.snapshotSource(),
                 auditedAction.metadataFields(),
-                new String[] {auditedAction.metadata()},
+                auditedAction.metadataFields(),
                 auditedAction.tags(),
                 auditedAction.recordFailures());
     }
