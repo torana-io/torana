@@ -48,6 +48,7 @@ import java.lang.annotation.Target;
  * @see AuditedCreate
  * @see AuditedDelete
  */
+@AuditedAction(value = "entity.updated")
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
