@@ -6,135 +6,84 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "torana")
 public class ToranaProperties {
 
-    /** Whether to enable Torana audit trail. */
     private boolean enabled = true;
-
-    /** The database table name for storing audit entries. */
     private String tableName = "audit_entries";
-
-    /**
-     * Schema initialization mode.
-     * <ul>
-     *   <li>{@code none} - No schema initialization (default)</li>
-     *   <li>{@code create} - Create schema if it doesn't exist</li>
-     *   <li>{@code create-drop} - Create schema on startup, drop on shutdown</li>
-     * </ul>
-     */
-    private SchemaMode schemaMode = SchemaMode.CREATE;
-
-    /** Redaction configuration. */
+    private SchemaMode schemaMode = SchemaMode.NONE;
     private RedactionProperties redaction = new RedactionProperties();
-
-    /** Snapshot configuration for change tracking. */
     private SnapshotProperties snapshot = new SnapshotProperties();
+    private MetricsProperties metrics = new MetricsProperties();
 
-    /** Schema initialization modes. */
-    public enum SchemaMode {
-        /** No automatic schema creation. */
-        NONE,
-        /** Create schema if it doesn't exist. */
-        CREATE,
-        /** Create schema on startup, drop on shutdown. */
-        CREATE_DROP
-    }
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public String getTableName() { return tableName; }
+    public void setTableName(String tableName) { this.tableName = tableName; }
+    public SchemaMode getSchemaMode() { return schemaMode; }
+    public void setSchemaMode(SchemaMode schemaMode) { this.schemaMode = schemaMode; }
+    public RedactionProperties getRedaction() { return redaction; }
+    public void setRedaction(RedactionProperties redaction) { this.redaction = redaction; }
+    public SnapshotProperties getSnapshot() { return snapshot; }
+    public void setSnapshot(SnapshotProperties snapshot) { this.snapshot = snapshot; }
+    public MetricsProperties getMetrics() { return metrics; }
+    public void setMetrics(MetricsProperties metrics) { this.metrics = metrics; }
 
-    public boolean isEnabled() {
-        return enabled;
-    }
+    public enum SchemaMode { NONE, CREATE, CREATE_DROP }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public String getTableName() {
-        return tableName;
-    }
-
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
-    }
-
-    public SchemaMode getSchemaMode() {
-        return schemaMode;
-    }
-
-    public void setSchemaMode(SchemaMode schemaMode) {
-        this.schemaMode = schemaMode;
-    }
-
-    public RedactionProperties getRedaction() {
-        return redaction;
-    }
-
-    public void setRedaction(RedactionProperties redaction) {
-        this.redaction = redaction;
-    }
-
-    public SnapshotProperties getSnapshot() {
-        return snapshot;
-    }
-
-    public void setSnapshot(SnapshotProperties snapshot) {
-        this.snapshot = snapshot;
-    }
-
-    /** Redaction configuration. */
     public static class RedactionProperties {
+        private boolean enabled = true;
+        private String[] patterns = {
+            "(?i)password", "(?i)secret", "(?i)token", "(?i)credential",
+            "(?i)ssn", "(?i)social.?security", "(?i)credit.?card"
+        };
+        private String placeholder = "[REDACTED]";
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public String[] getPatterns() { return patterns; }
+        public void setPatterns(String[] patterns) { this.patterns = patterns; }
+        public String getPlaceholder() { return placeholder; }
+        public void setPlaceholder(String placeholder) { this.placeholder = placeholder; }
+    }
 
-        /** Whether to enable sensitive data redaction. */
+    public static class SnapshotProperties {
+        private int maxDepth = 3;
+        public int getMaxDepth() { return maxDepth; }
+        public void setMaxDepth(int maxDepth) { this.maxDepth = maxDepth; }
+    }
+
+    /** Metrics configuration for monitoring audit operations. */
+    public static class MetricsProperties {
+
+        /** Whether to enable Micrometer metrics collection for audit operations. */
         private boolean enabled = true;
 
-        /** Patterns for field names to redact (regex). */
-        private String[] patterns = {
-            "(?i)password",
-            "(?i)secret",
-            "(?i)token",
-            "(?i)credential",
-            "(?i)ssn",
-            "(?i)social.?security",
-            "(?i)credit.?card"
-        };
+        /**
+         * Whether to include detailed tags (action name, outcome) in metrics.
+         *
+         * <p>Enabling this provides more granular metrics but may increase cardinality
+         * significantly, especially if you have many unique action names.
+         */
+        private boolean includeDetailedTags = false;
 
-        /** The placeholder text for redacted values. */
-        private String placeholder = "[REDACTED]";
+        /**
+         * Time window in seconds for health check statistics.
+         *
+         * <p>The health indicator tracks error rates within this window.
+         */
+        private int healthCheckWindowSeconds = 60;
 
-        public boolean isEnabled() {
-            return enabled;
-        }
+        /**
+         * Error rate threshold (0.0 to 1.0) that triggers a health check warning.
+         *
+         * <p>Default: 0.1 (10% error rate)
+         */
+        private double errorRateThreshold = 0.1;
 
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-
-        public String[] getPatterns() {
-            return patterns;
-        }
-
-        public void setPatterns(String[] patterns) {
-            this.patterns = patterns;
-        }
-
-        public String getPlaceholder() {
-            return placeholder;
-        }
-
-        public void setPlaceholder(String placeholder) {
-            this.placeholder = placeholder;
-        }
-    }
-
-    /** Snapshot configuration. */
-    public static class SnapshotProperties {
-
-        /** Maximum depth for object traversal during snapshots. */
-        private int maxDepth = 3;
-
-        public int getMaxDepth() {
-            return maxDepth;
-        }
-
-        public void setMaxDepth(int maxDepth) {
-            this.maxDepth = maxDepth;
-        }
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public boolean isIncludeDetailedTags() { return includeDetailedTags; }
+        public void setIncludeDetailedTags(boolean includeDetailedTags) { this.includeDetailedTags = includeDetailedTags; }
+        public int getHealthCheckWindowSeconds() { return healthCheckWindowSeconds; }
+        public void setHealthCheckWindowSeconds(int s) { this.healthCheckWindowSeconds = s; }
+        public double getErrorRateThreshold() { return errorRateThreshold; }
+        public void setErrorRateThreshold(double t) { this.errorRateThreshold = t; }
     }
 }
