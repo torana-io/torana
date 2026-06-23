@@ -28,8 +28,51 @@ import java.lang.annotation.Target;
  *
  * <p>The {@code targetId} attribute supports SpEL expressions to extract values from method
  * parameters.
+ *
+ * <h2>Metadata</h2>
+ *
+ * <p>There are three ways to specify metadata:
+ *
+ * <ol>
+ *   <li><strong>{@link #metadataFields()} (recommended):</strong> Array of key:expression pairs.
+ *       Supports complex SpEL expressions with commas, quotes, and method calls.
+ *   <li><strong>{@code @AuditMetadata}:</strong> Companion annotation for structured metadata with
+ *       type-safe {@code @MetadataField} definitions.
+ *   <li><strong>{@link #metadata()} (legacy):</strong> Comma-separated string format. Deprecated
+ *       due to parsing limitations with complex expressions.
+ * </ol>
+ *
+ * <p>Example with {@link #metadataFields()}:
+ *
+ * <pre>{@code
+ * @AuditedAction(
+ *     value = "order.cancelled",
+ *     targetType = "Order",
+ *     targetId = "#command.orderId",
+ *     metadataFields = {
+ *         "reason:#command.reason",
+ *         "priority:#command.priority"
+ *     }
+ * )
+ * }</pre>
+ *
+ * <p>Example with {@code @AuditMetadata}:
+ *
+ * <pre>{@code
+ * @AuditedAction(value = "order.placed", targetType = "Order", targetId = "#order.id")
+ * @AuditMetadata({
+ *     @MetadataField(key = "customerId", value = "#order.customerId"),
+ *     @MetadataField(key = "total", value = "#order.total")
+ * })
+ * public void placeOrder(PlaceOrderCommand command) {
+ *     // business logic
+ * }
+ * }</pre>
+ *
+ * @see io.torana.api.AuditMetadata
+ * @see io.torana.api.MetadataField
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface AuditedAction {
@@ -96,9 +139,51 @@ public @interface AuditedAction {
      * <p>Format: key=expression pairs separated by commas. Example: "reason=#command.reason,
      * priority=#command.priority"
      *
+     * <p><strong>Note:</strong> This format has limitations with complex expressions containing
+     * commas. Use {@link #metadataFields()} or {@code @AuditMetadata} instead for better
+     * reliability.
+     *
      * @return the metadata expressions
+     * @deprecated since 0.2.0. Use {@link #metadataFields()} or {@code @AuditMetadata} annotation
+     *     for better type safety and support for complex expressions. This attribute will remain
+     *     supported indefinitely for backward compatibility.
      */
+    @Deprecated(since = "0.2.0", forRemoval = false)
     String metadata() default "";
+
+    /**
+     * Metadata fields as key:expression pairs.
+     *
+     * <p>This is the recommended way to specify metadata, replacing the legacy comma-separated
+     * {@link #metadata()} string format. Each array element is independent, allowing complex SpEL
+     * expressions with commas, quotes, and method calls.
+     *
+     * <p>Each element should be in the format: {@code "key:expression"} where the expression is a
+     * SpEL expression evaluated against method parameters.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * @AuditedAction(
+     *     value = "order.cancelled",
+     *     targetType = "Order",
+     *     targetId = "#command.orderId",
+     *     metadataFields = {
+     *         "reason:#command.reason",
+     *         "priority:#command.priority",
+     *         "total:#order.calculateTotal(#tax, #shipping)"
+     *     }
+     * )
+     * }</pre>
+     *
+     * <p>Can be combined with {@code @AuditMetadata} annotation for structured metadata. When
+     * multiple metadata sources are present, they are merged with later sources overriding earlier
+     * ones.
+     *
+     * @return array of key:expression pairs
+     * @see io.torana.api.AuditMetadata
+     */
+    String[] metadataFields() default {};
 
     /**
      * Additional tags for categorization and filtering.

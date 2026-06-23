@@ -50,25 +50,48 @@ Torana fills a different gap:
 <dependency>
     <groupId>io.torana</groupId>
     <artifactId>torana-spring-boot-starter</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.10</version>
 </dependency>
 ```
 
 **Gradle:**
 ```groovy
-implementation 'io.torana:torana-spring-boot-starter:0.1.3'
+implementation 'io.torana:torana-spring-boot-starter:0.1.10'
 ```
 
-### 2. That's it!
+### 2. Create the audit table
 
-Torana auto-configures everything:
+Torana requires an `audit_entries` table. Choose your approach:
+
+**Option A: Use official migrations with Flyway or Liquibase (recommended)**
+
+Torana provides official migration files for all supported databases:
+- `torana-jdbc/src/main/resources/db/migration/postgresql/V1__create_audit_entries_table.sql`
+- `torana-jdbc/src/main/resources/db/migration/mysql/V1__create_audit_entries_table.sql`
+- `torana-jdbc/src/main/resources/db/migration/h2/V1__create_audit_entries_table.sql`
+
+Copy the appropriate file to your project's `src/main/resources/db/migration/` directory.
+
+See [Schema Management](docs/schema-management.md) for detailed setup instructions.
+
+**Option B: Let Torana create it (development/testing only)**
+
+```yaml
+torana:
+  schema-mode: create
+```
+
+### 3. That's it!
+
+Torana auto-configures everything else:
 - Detects your database (PostgreSQL, MySQL, or H2)
-- Creates the `audit_entries` table automatically
 - Starts capturing `@AuditedAction` annotated methods
 
-No additional configuration required. Just annotate your business methods.
+Just annotate your business methods.
 
 ## Example usage
+
+### Basic Usage
 
 ```java
 @AuditedAction(
@@ -83,6 +106,89 @@ public void cancelOrder(CancelOrderCommand command) {
 }
 ```
 
+### Adding Metadata
+
+Use `metadataFields` for type-safe metadata with complex expressions:
+
+```java
+@AuditedAction(
+    value = "order.cancelled",
+    targetType = "Order",
+    targetId = "#command.orderId",
+    metadataFields = {
+        "reason:#command.reason",
+        "priority:#command.priority",
+        "cancelledBy:#securityContext.username"
+    }
+)
+@Transactional
+public void cancelOrder(CancelOrderCommand command) {
+    Order order = orderRepository.getById(command.orderId());
+    order.cancel(command.reason());
+}
+```
+
+Or use `@AuditMetadata` for structured metadata:
+
+```java
+@AuditedAction(
+    value = "order.placed",
+    targetType = "Order",
+    targetId = "#order.id"
+)
+@AuditMetadata({
+    @MetadataField(key = "customerId", value = "#order.customerId"),
+    @MetadataField(key = "items", value = "#order.items.size()"),
+    @MetadataField(key = "total", value = "#order.total")
+})
+@Transactional
+public void placeOrder(PlaceOrderCommand command) {
+    Order order = orderService.createOrder(command);
+    orderRepository.save(order);
+}
+```
+
+### Preset Annotations
+
+For common operations, use preset annotations to reduce boilerplate:
+
+```java
+@AuditedCreate(
+    targetType = "Order",
+    targetId = "#order.id",
+    captureChanges = true,
+    snapshotSource = "#order"
+)
+@Transactional
+public void createOrder(CreateOrderCommand command) {
+    Order order = orderService.createOrder(command);
+    orderRepository.save(order);
+}
+
+@AuditedUpdate(
+    targetType = "Order",
+    targetId = "#order.id",
+    captureChanges = true,
+    snapshotSource = "#order"
+)
+@Transactional
+public void updateOrder(Order order, UpdateOrderCommand command) {
+    orderService.applyChanges(order, command);
+    orderRepository.save(order);
+}
+
+@AuditedDelete(
+    targetType = "Order",
+    targetId = "#orderId"
+)
+@Transactional
+public void deleteOrder(String orderId) {
+    orderRepository.deleteById(orderId);
+}
+```
+
+### Query Audit Entries
+
 The goal is that a team can later query something like:
 
 - action = `order.cancelled`
@@ -91,6 +197,18 @@ The goal is that a team can later query something like:
 - tenant = `acme`
 - requestId = `req-456`
 - traceId = `trace-789`
+- metadata.reason = `Customer requested cancellation`
+- metadata.priority = `high`
+
+## Transaction Behavior
+
+By default, Torana writes:
+- **Success entries** after transaction commit (prevents orphaned records)
+- **Failure entries** immediately (captures the attempt)
+
+Audit failures are logged but don't affect your business operations.
+
+See [Transaction Semantics Guide](docs/transaction-semantics.md) for detailed configuration.
 
 ## Configuration
 
@@ -100,7 +218,7 @@ Torana works out of the box with sensible defaults. All settings are optional:
 torana:
   enabled: true           # Enable/disable audit trail (default: true)
   table-name: audit_entries  # Table name (default: audit_entries)
-  schema-mode: create     # Schema management: none, create, create-drop (default: create)
+  schema-mode: none       # Schema management: none, create, create-drop (default: none)
 
   redaction:
     enabled: true         # Enable sensitive data redaction (default: true)
@@ -115,13 +233,40 @@ torana:
     max-depth: 3          # Max object traversal depth (default: 3)
 ```
 
-### Schema Modes
+### Schema Management
 
-| Mode | Description |
-|------|-------------|
-| `create` | Creates table if it doesn't exist (default) |
-| `none` | No automatic schema management - you manage the table |
-| `create-drop` | Creates on startup, drops on shutdown (for testing) |
+Torana defaults to `schema-mode: none`, expecting you to manage the audit table schema yourself.
+
+**Recommended approach by environment:**
+
+| Environment | Mode | Migration Tool |
+|-------------|------|----------------|
+| **Production** | `none` | Flyway or Liquibase |
+| **Development** | `create` | (optional) Torana auto-create |
+| **Testing** | `create-drop` | Torana auto-create/drop |
+
+#### Schema Modes
+
+| Mode | Behavior | Use Case |
+|------|----------|----------|
+| `none` | No automatic schema management (default) | Production - manage with Flyway/Liquibase |
+| `create` | Creates table if it doesn't exist | Local development and exploration |
+| `create-drop` | Creates on startup, drops on shutdown | Integration tests |
+
+#### Official Migration Files
+
+Torana provides versioned migration files for all supported databases:
+
+```
+torana-jdbc/src/main/resources/db/migration/
+├── postgresql/V1__create_audit_entries_table.sql
+├── mysql/V1__create_audit_entries_table.sql
+└── h2/V1__create_audit_entries_table.sql
+```
+
+For detailed setup instructions, migration strategies, and schema evolution policies, see:
+- [Schema Management Guide](docs/schema-management.md)
+- [Database Migrations](docs/migrations.md)
 
 ### Database Support
 
@@ -151,7 +296,9 @@ torana-test
 
 ## Current status
 
-Torana has completed its initial development phase and is ready for production use.
+Torana is an early production-candidate library for Spring Boot teams that want explicit business-action audit trails.
+
+It is suitable for controlled adoption and pilot usage. Before using it in critical systems, review the transaction semantics, schema management, redaction configuration, and migration policy.
 
 Features include:
 
@@ -182,6 +329,8 @@ The long-term vision is:
 
 ## Documentation
 
+- Schema management: [docs/schema-management.md](docs/schema-management.md)
+- Database migrations: [docs/migrations.md](docs/migrations.md)
 - Release process: [RELEASING.md](RELEASING.md)
 - Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 

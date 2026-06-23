@@ -11,6 +11,7 @@ import io.torana.jdbc.JdbcAuditWriter;
 import io.torana.jdbc.dialect.DialectDetector;
 import io.torana.jdbc.dialect.SqlDialect;
 import io.torana.spi.ActorResolver;
+import io.torana.spi.AuditErrorHandler;
 import io.torana.spi.AuditWriter;
 import io.torana.spi.DiffEngine;
 import io.torana.spi.RedactionPolicy;
@@ -23,17 +24,19 @@ import io.torana.spring.aop.SpringTransactionAwareWriter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
@@ -85,10 +88,20 @@ public class ToranaAutoConfiguration {
         return new ToranaSchemaInitializer(jdbcTemplate, dialect, properties);
     }
 
+    /**
+     * Creates the delegate audit writer (JDBC-based).
+     *
+     * <p>This bean is qualified as "delegateAuditWriter" to allow other components (like
+     * MetricsAuditWriter) to decorate it without causing circular dependencies.
+     *
+     * <p>The actual primary AuditWriter bean may be a decorated version if metrics are enabled (see
+     * ToranaMicrometerAutoConfiguration).
+     */
     @Bean
-    @ConditionalOnMissingBean(AuditWriter.class)
+    @Qualifier("delegateAuditWriter")
+    @ConditionalOnMissingBean(name = "delegateAuditWriter")
     @ConditionalOnBean({JdbcTemplate.class, SqlDialect.class})
-    public AuditWriter toranaAuditWriter(
+    public AuditWriter delegateAuditWriter(
             JdbcTemplate jdbcTemplate, SqlDialect dialect, ToranaProperties properties) {
         return new JdbcAuditWriter(jdbcTemplate, dialect, properties.getTableName());
     }
@@ -97,8 +110,18 @@ public class ToranaAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnBean(AuditWriter.class)
     @ConditionalOnClass(TransactionSynchronizationManager.class)
-    public TransactionAwareWriter toranaTransactionAwareWriter(AuditWriter auditWriter) {
-        return new SpringTransactionAwareWriter(auditWriter);
+    public TransactionAwareWriter toranaTransactionAwareWriter(
+            AuditWriter auditWriter,
+            ToranaProperties properties,
+            @Autowired(required = false) PlatformTransactionManager transactionManager) {
+
+        ToranaProperties.TransactionProperties txProps = properties.getTransaction();
+
+        return new SpringTransactionAwareWriter(
+                auditWriter,
+                txProps.getSuccessWritePolicy(),
+                txProps.getFailureWritePolicy(),
+                transactionManager);
     }
 
     @Bean
@@ -149,17 +172,31 @@ public class ToranaAutoConfiguration {
             ContextCollector contextCollector,
             AuditEntryFactory entryFactory,
             RedactionPolicy redactionPolicy,
-            TransactionAwareWriter transactionAwareWriter) {
+            TransactionAwareWriter transactionAwareWriter,
+            ToranaProperties properties,
+            @Autowired(required = false) AuditErrorHandler errorHandler) {
+
+        ToranaProperties.TransactionProperties txProps = properties.getTransaction();
+
         return new AuditPipeline(
-                contextCollector, entryFactory, redactionPolicy, transactionAwareWriter);
+                contextCollector,
+                entryFactory,
+                redactionPolicy,
+                transactionAwareWriter,
+                txProps.getAuditErrorPolicy(),
+                errorHandler);
     }
 
     @Bean
     @ConditionalOnMissingBean
     public AuditedActionAspect toranaAuditedActionAspect(
-            AuditPipeline auditPipeline, SnapshotProvider snapshotProvider, ToranaProperties properties) {
-        log.info("Torana audit trail initialized - table: '{}', schema-mode: {}",
-                properties.getTableName(), properties.getSchemaMode().name().toLowerCase().replace('_', '-'));
+            AuditPipeline auditPipeline,
+            SnapshotProvider snapshotProvider,
+            ToranaProperties properties) {
+        log.info(
+                "Torana audit trail initialized - table: '{}', schema-mode: {}",
+                properties.getTableName(),
+                properties.getSchemaMode().name().toLowerCase().replace('_', '-'));
         return new AuditedActionAspect(auditPipeline, snapshotProvider);
     }
 }
