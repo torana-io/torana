@@ -229,41 +229,7 @@ public class AuditedActionAspect {
         context.markStarted();
         context.setAction(AuditAction.of(actionName));
 
-        String targetIdExpr = targetId;
-        String targetDisplayNameExpr = targetDisplayName;
-
-        if (!targetType.isEmpty() && !targetIdExpr.isEmpty()) {
-            String evaluatedTargetId =
-                    evaluateExpression(targetIdExpr, evaluationContext, String.class);
-            String displayName =
-                    !targetDisplayNameExpr.isEmpty()
-                            ? evaluateExpression(
-                                    targetDisplayNameExpr, evaluationContext, String.class)
-                            : null;
-            if (evaluatedTargetId != null) {
-                context.setTarget(Target.of(targetType, evaluatedTargetId, displayName));
-            }
-        }
-
-        io.torana.api.AuditMetadata auditMetadata =
-                method.getAnnotation(io.torana.api.AuditMetadata.class);
-        if (auditMetadata != null) {
-            Map<String, Object> metadata = parseAuditMetadata(auditMetadata, evaluationContext);
-            context.addAllMetadata(metadata);
-        }
-
-        if (metadataFields.length > 0) {
-            Map<String, Object> metadata = parseMetadataFields(metadataFields, evaluationContext);
-            context.addAllMetadata(metadata);
-        }
-
-        // Process legacy metadata string (deprecated but supported for backward compatibility)
-        // Note: Presets don't support the legacy format
-        if (metadataString.length > 0 && !metadataString[0].isEmpty()) {
-            Map<String, Object> metadata = parseMetadata(metadataString[0], evaluationContext);
-            context.addAllMetadata(metadata);
-        }
-
+        // Process metadata and tags that don't depend on #result
         if (tags.length > 0) {
             context.addMetadata("tags", java.util.List.of(tags));
         }
@@ -277,14 +243,78 @@ public class AuditedActionAspect {
         }
 
         Object result;
+        boolean shouldRecord = false;
         try {
             result = joinPoint.proceed();
             context.setOutcome(AuditOutcome.SUCCESS);
+            shouldRecord = true;
+
+            // Now that we have the result, add it to the evaluation context
+            evaluationContext.setVariable("result", result);
+
+            // Evaluate target information that may reference #result
+            if (!targetType.isEmpty() && !targetId.isEmpty()) {
+                String evaluatedTargetId =
+                        evaluateExpression(targetId, evaluationContext, String.class);
+                String displayName =
+                        !targetDisplayName.isEmpty()
+                                ? evaluateExpression(targetDisplayName, evaluationContext, String.class)
+                                : null;
+                if (evaluatedTargetId != null) {
+                    context.setTarget(Target.of(targetType, evaluatedTargetId, displayName));
+                }
+            }
+
+            // Evaluate metadata fields that may reference #result
+            io.torana.api.AuditMetadata auditMetadata =
+                    method.getAnnotation(io.torana.api.AuditMetadata.class);
+            if (auditMetadata != null) {
+                Map<String, Object> metadata = parseAuditMetadata(auditMetadata, evaluationContext);
+                context.addAllMetadata(metadata);
+            }
+
+            if (metadataFields.length > 0) {
+                Map<String, Object> metadata = parseMetadataFields(metadataFields, evaluationContext);
+                context.addAllMetadata(metadata);
+            }
+
+            // Process legacy metadata string (deprecated but supported for backward compatibility)
+            // Note: Presets don't support the legacy format
+            if (metadataString.length > 0 && !metadataString[0].isEmpty()) {
+                Map<String, Object> metadata = parseMetadata(metadataString[0], evaluationContext);
+                context.addAllMetadata(metadata);
+            }
         } catch (Throwable t) {
             if (recordFailures) {
+                shouldRecord = true;
+
+                // Add target and metadata even for failures, but they won't reference #result
+                if (!targetType.isEmpty() && !targetId.isEmpty()) {
+                    String evaluatedTargetId =
+                            evaluateExpression(targetId, evaluationContext, String.class);
+                    String displayName =
+                            !targetDisplayName.isEmpty()
+                                    ? evaluateExpression(targetDisplayName, evaluationContext, String.class)
+                                    : null;
+                    if (evaluatedTargetId != null) {
+                        context.setTarget(Target.of(targetType, evaluatedTargetId, displayName));
+                    }
+                }
+
+                // Evaluate metadata for failures
+                io.torana.api.AuditMetadata auditMetadata =
+                        method.getAnnotation(io.torana.api.AuditMetadata.class);
+                if (auditMetadata != null) {
+                    Map<String, Object> metadata = parseAuditMetadata(auditMetadata, evaluationContext);
+                    context.addAllMetadata(metadata);
+                }
+
+                if (metadataFields.length > 0) {
+                    Map<String, Object> metadata = parseMetadataFields(metadataFields, evaluationContext);
+                    context.addAllMetadata(metadata);
+                }
+
                 context.recordError(t);
-            } else {
-                throw t;
             }
             throw t;
         } finally {
@@ -293,7 +323,10 @@ public class AuditedActionAspect {
             }
 
             // Pipeline handles errors internally based on configured AuditErrorPolicy
-            auditPipeline.process(context);
+            // Only process if we should record
+            if (shouldRecord) {
+                auditPipeline.process(context);
+            }
         }
 
         return result;
