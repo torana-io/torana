@@ -47,7 +47,8 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
     private final SqlDialect dialect;
     private final String tableName;
     private final ObjectMapper objectMapper;
-
+    private final List<MetadataFilter> metadataFilters = new ArrayList<>();
+    private final List<String> metadataKeyExists = new ArrayList<>();
     private String action;
     private String actionPrefix;
     private String actorId;
@@ -61,6 +62,8 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
     private String traceId;
     private int limit = DEFAULT_LIMIT;
     private int offset = 0;
+    private String orderByField = "occurred_at";
+    private AuditQuery.OrderDirection orderDirection = AuditQuery.OrderDirection.DESC;
 
     /**
      * Creates a new JdbcAuditQueryExecutor with the default table name.
@@ -163,6 +166,26 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
     }
 
     @Override
+    public AuditQuery metadata(String key, Object value) {
+        this.metadataFilters.add(new MetadataFilter(key, value));
+        return this;
+    }
+
+    @Override
+    public AuditQuery hasMetadata(String key) {
+        this.metadataKeyExists.add(key);
+        return this;
+    }
+
+    @Override
+    public AuditQuery orderBy(String field, AuditQuery.OrderDirection direction) {
+        JsonQueryHelper.validateOrderByField(field);
+        this.orderByField = field;
+        this.orderDirection = direction != null ? direction : AuditQuery.OrderDirection.DESC;
+        return this;
+    }
+
+    @Override
     public AuditQuery limit(int limit) {
         this.limit = Math.min(Math.max(1, limit), MAX_LIMIT);
         return this;
@@ -180,12 +203,24 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
         List<Object> params = new ArrayList<>();
 
         appendWhereClause(sql, params);
-        sql.append(" ORDER BY occurred_at DESC");
+
+        sql.append(" ORDER BY ").append(orderByField);
+        sql.append(orderDirection == AuditQuery.OrderDirection.DESC ? " DESC" : " ASC");
+
         sql.append(" LIMIT ? OFFSET ?");
         params.add(limit);
         params.add(offset);
 
         return jdbcTemplate.query(sql.toString(), new AuditEntryRowMapper(), params.toArray());
+    }
+
+    @Override
+    public io.torana.api.AuditQueryResult executeWithPagination() {
+        List<AuditEntryView> entries = execute();
+
+        long totalCount = count();
+
+        return io.torana.api.AuditQueryResult.of(entries, totalCount, offset, limit);
     }
 
     @Override
@@ -244,6 +279,22 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
             sql.append(" AND trace_id = ?");
             params.add(traceId);
         }
+
+        for (MetadataFilter filter : metadataFilters) {
+            String condition =
+                    JsonQueryHelper.buildMetadataFilterCondition(
+                            dialect, "metadata", filter.key, filter.value);
+            sql.append(" AND ").append(condition);
+            if (filter.value != null) {
+                params.add(filter.value);
+            }
+        }
+
+        for (String key : metadataKeyExists) {
+            String condition =
+                    JsonQueryHelper.buildMetadataKeyExistsCondition(dialect, "metadata", key);
+            sql.append(" AND ").append(condition);
+        }
     }
 
     /**
@@ -273,6 +324,9 @@ public class JdbcAuditQueryExecutor implements AuditQuery {
             String errorMessage,
             int schemaVersion)
             implements AuditEntryView {}
+
+    /** Helper record for metadata filtering. */
+    private record MetadataFilter(String key, Object value) {}
 
     /** Row mapper for audit entries. */
     private class AuditEntryRowMapper implements RowMapper<AuditEntryView> {
