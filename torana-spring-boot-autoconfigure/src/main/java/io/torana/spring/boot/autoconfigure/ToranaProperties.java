@@ -1,5 +1,8 @@
 package io.torana.spring.boot.autoconfigure;
 
+import io.torana.core.AuditErrorPolicy;
+import io.torana.core.TransactionAwareWriter.WritePolicy;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /** Configuration properties for Torana audit trail. */
@@ -14,13 +17,14 @@ public class ToranaProperties {
 
     /**
      * Schema initialization mode.
+     *
      * <ul>
-     *   <li>{@code none} - No schema initialization (default)</li>
-     *   <li>{@code create} - Create schema if it doesn't exist</li>
-     *   <li>{@code create-drop} - Create schema on startup, drop on shutdown</li>
+     *   <li>{@code none} - No schema initialization (default, use Flyway/Liquibase)
+     *   <li>{@code create} - Create schema if it doesn't exist (development)
+     *   <li>{@code create-drop} - Create schema on startup, drop on shutdown (testing)
      * </ul>
      */
-    private SchemaMode schemaMode = SchemaMode.CREATE;
+    private SchemaMode schemaMode = SchemaMode.NONE;
 
     /** Redaction configuration. */
     private RedactionProperties redaction = new RedactionProperties();
@@ -28,113 +32,60 @@ public class ToranaProperties {
     /** Snapshot configuration for change tracking. */
     private SnapshotProperties snapshot = new SnapshotProperties();
 
-    /** Schema initialization modes. */
-    public enum SchemaMode {
-        /** No automatic schema creation. */
-        NONE,
-        /** Create schema if it doesn't exist. */
-        CREATE,
-        /** Create schema on startup, drop on shutdown. */
-        CREATE_DROP
-    }
+    /** Transaction configuration for audit writes. */
+    private TransactionProperties transaction = new TransactionProperties();
 
-    public boolean isEnabled() {
-        return enabled;
-    }
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
+    public String getTableName() { return tableName; }
+    public void setTableName(String tableName) { this.tableName = tableName; }
 
-    public String getTableName() {
-        return tableName;
-    }
+    public SchemaMode getSchemaMode() { return schemaMode; }
+    public void setSchemaMode(SchemaMode schemaMode) { this.schemaMode = schemaMode; }
 
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
-    }
+    public RedactionProperties getRedaction() { return redaction; }
+    public void setRedaction(RedactionProperties redaction) { this.redaction = redaction; }
 
-    public SchemaMode getSchemaMode() {
-        return schemaMode;
-    }
+    public SnapshotProperties getSnapshot() { return snapshot; }
+    public void setSnapshot(SnapshotProperties snapshot) { this.snapshot = snapshot; }
 
-    public void setSchemaMode(SchemaMode schemaMode) {
-        this.schemaMode = schemaMode;
-    }
+    public TransactionProperties getTransaction() { return transaction; }
+    public void setTransaction(TransactionProperties transaction) { this.transaction = transaction; }
 
-    public RedactionProperties getRedaction() {
-        return redaction;
-    }
+    public enum SchemaMode { NONE, CREATE, CREATE_DROP }
 
-    public void setRedaction(RedactionProperties redaction) {
-        this.redaction = redaction;
-    }
-
-    public SnapshotProperties getSnapshot() {
-        return snapshot;
-    }
-
-    public void setSnapshot(SnapshotProperties snapshot) {
-        this.snapshot = snapshot;
-    }
-
-    /** Redaction configuration. */
     public static class RedactionProperties {
-
-        /** Whether to enable sensitive data redaction. */
         private boolean enabled = true;
-
-        /** Patterns for field names to redact (regex). */
         private String[] patterns = {
-            "(?i)password",
-            "(?i)secret",
-            "(?i)token",
-            "(?i)credential",
-            "(?i)ssn",
-            "(?i)social.?security",
-            "(?i)credit.?card"
+            "(?i)password", "(?i)secret", "(?i)token", "(?i)credential",
+            "(?i)ssn", "(?i)social.?security", "(?i)credit.?card"
         };
-
-        /** The placeholder text for redacted values. */
         private String placeholder = "[REDACTED]";
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-
-        public String[] getPatterns() {
-            return patterns;
-        }
-
-        public void setPatterns(String[] patterns) {
-            this.patterns = patterns;
-        }
-
-        public String getPlaceholder() {
-            return placeholder;
-        }
-
-        public void setPlaceholder(String placeholder) {
-            this.placeholder = placeholder;
-        }
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public String[] getPatterns() { return patterns; }
+        public void setPatterns(String[] patterns) { this.patterns = patterns; }
+        public String getPlaceholder() { return placeholder; }
+        public void setPlaceholder(String placeholder) { this.placeholder = placeholder; }
     }
 
-    /** Snapshot configuration. */
     public static class SnapshotProperties {
-
-        /** Maximum depth for object traversal during snapshots. */
         private int maxDepth = 3;
+        public int getMaxDepth() { return maxDepth; }
+        public void setMaxDepth(int maxDepth) { this.maxDepth = maxDepth; }
+    }
 
-        public int getMaxDepth() {
-            return maxDepth;
-        }
+    public static class TransactionProperties {
+        private WritePolicy successWritePolicy = WritePolicy.AFTER_COMMIT;
+        private WritePolicy failureWritePolicy = WritePolicy.IMMEDIATE;
+        private AuditErrorPolicy auditErrorPolicy = AuditErrorPolicy.LOG_AND_CONTINUE;
 
-        public void setMaxDepth(int maxDepth) {
-            this.maxDepth = maxDepth;
-        }
+        public WritePolicy getSuccessWritePolicy() { return successWritePolicy; }
+        public void setSuccessWritePolicy(WritePolicy p) { this.successWritePolicy = p; }
+        public WritePolicy getFailureWritePolicy() { return failureWritePolicy; }
+        public void setFailureWritePolicy(WritePolicy p) { this.failureWritePolicy = p; }
+        public AuditErrorPolicy getAuditErrorPolicy() { return auditErrorPolicy; }
+        public void setAuditErrorPolicy(AuditErrorPolicy p) { this.auditErrorPolicy = p; }
     }
 }
