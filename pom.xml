@@ -42,6 +42,7 @@
         <module>torana-spring-security</module>
         <module>torana-spring-webmvc</module>
         <module>torana-micrometer</module>
+        <module>torana-resilience</module>
         <module>torana-spring-boot-autoconfigure</module>
         <module>torana-spring-boot-starter</module>
         <module>torana-test</module>
@@ -113,6 +114,11 @@
             </dependency>
             <dependency>
                 <groupId>io.torana</groupId>
+                <artifactId>torana-resilience</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.torana</groupId>
                 <artifactId>torana-spring-boot-autoconfigure</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -152,6 +158,12 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-annotations</artifactId>
+            <version>4.8.6</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

@@ -57,7 +57,17 @@
             <Class name="io.torana.core.DefaultTransactionAwareWriter"/>
             <Class name="io.torana.spring.aop.SpringTransactionAwareWriter"/>
             <Class name="io.torana.micrometer.MicrometerTraceResolver"/>
+            <Class name="io.torana.micrometer.MetricsAuditWriter"/>
+            <Class name="~io\.torana\.resilience\..*"/>
             <Class name="~io\.torana\.spring\.boot\.autoconfigure\..*"/>
+        </Or>
+    </Match>
+
+    <!-- Allow returning collaborators from wrapper/adapter classes -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Or>
+            <Class name="~io\.torana\.resilience\..*"/>
         </Or>
     </Match>
 
