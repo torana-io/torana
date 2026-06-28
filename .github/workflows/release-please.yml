@@ -79,7 +79,7 @@ jobs:
             core.setFailed('Timed out waiting for the CI build check to complete.');
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: 21
           distribution: 'temurin'
